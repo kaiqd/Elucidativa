@@ -19,7 +19,7 @@ struct AddReportSheet: View {
                 VStack {
                     TextField(text: $text) {
                         Text("Nome do exame")
-                            .font(.system(size: 16, weight: .regular)) 
+                            .font(.system(size: 16, weight: .regular))
                             .foregroundStyle(.black)
                     }
                     .frame(height: 50)
@@ -49,6 +49,9 @@ struct AddReportSheet: View {
             ToolbarItem(placement: .cancellationAction) {
                 Text("Cancelar")
                     .foregroundStyle(.mainText)
+                    .onTapGesture {
+                        dismiss()
+                    }
             }
             
             ToolbarItem(placement: .principal) {
