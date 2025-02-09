@@ -35,13 +35,23 @@ struct HomeView: View {
                     .font(.system(size: 28, weight: .bold))
                     .foregroundStyle(.mainText)
                     .padding(.bottom, 8)
-                    .padding(.bottom, 70)
+                    .padding(.bottom, viewModel.examsList.isEmpty ? 70 : 0)
                 
-                Text("Nenhum resultado de laudo ainda cadastrado")
-                    .font(.system(size: 20, weight: .bold))
-                    .multilineTextAlignment(.center)
-                    .foregroundStyle(.cardTextGalery)
-                    .padding(.horizontal, 24)
+                if viewModel.examsList.isEmpty {
+                    Text("Nenhum resultado de laudo ainda cadastrado")
+                        .font(.system(size: 20, weight: .bold))
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(.cardTextGalery)
+                        .padding(.horizontal, 24)
+                } else {
+                    ScrollView {
+                        ForEach(0..<ExamModel.mockExams.count, id: \.self) {
+                            SmallCard(exam: ExamModel.mockExams[$0])
+                                .padding(.bottom, 4)
+                        }
+                    }
+                    .scrollIndicators(.hidden)
+                }
                 
                 Spacer()
             }

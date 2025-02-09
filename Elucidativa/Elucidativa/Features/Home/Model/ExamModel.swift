@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct ExamModel {
+struct ExamModel: Identifiable {
     var id: UUID
     var date: Date
     var title: String
