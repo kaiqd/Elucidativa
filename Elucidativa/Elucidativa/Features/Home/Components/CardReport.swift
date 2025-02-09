@@ -22,7 +22,7 @@ struct CardReport: View {
         .foregroundStyle(.cardText)
         .frame(maxWidth: 335, maxHeight: 147)
         .background {
-            Color.background
+            Color.cardBackground
                 .clipShape(.rect(cornerRadius: 16))
         }
         .onTapGesture {
