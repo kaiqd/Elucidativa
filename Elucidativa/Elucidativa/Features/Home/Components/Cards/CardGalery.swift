@@ -22,7 +22,7 @@ struct CardGalery: View {
         .foregroundStyle(.cardTextGalery)
         .frame(maxWidth: 358, maxHeight: 200)
         .background {
-            Color.background
+            Color.cardBackground
                 .clipShape(.rect(cornerRadius: 16))
         }
         .onTapGesture {
