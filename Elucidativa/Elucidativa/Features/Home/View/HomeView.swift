@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct HomeView: View {
+    @EnvironmentObject var viewModel: HomeViewModel
+    
     var body: some View {
         ZStack {
             Color.background.ignoresSafeArea()
@@ -51,4 +53,5 @@ struct HomeView: View {
 
 #Preview {
     HomeView()
+        .environmentObject(HomeViewModel())
 }
