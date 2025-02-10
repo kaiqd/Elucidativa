@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ExamResult: View {
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var viewModel: HomeViewModel
     let exam: ExamModel
     
     var body: some View {
@@ -18,7 +19,7 @@ struct ExamResult: View {
             
             ScrollView {
                 VStack(alignment: .leading) {
-                    Image(.mockExam)
+                    Image(uiImage: UIImage(data: exam.image) ?? UIImage(resource: .mockExam))
                         .resizable()
                         .frame(maxWidth: 358, maxHeight: 200)
                         .clipShape(.rect(cornerRadius: 12))
@@ -34,7 +35,8 @@ struct ExamResult: View {
                         .padding(.bottom, 16)
                     
                     Button {
-//                    showAlert = true
+                        viewModel.deleteExam(id: exam.id)
+                        dismiss()
                     } label: {
                         Text("Apagar Laudo")
                             .fontWeight(.bold)
@@ -77,4 +79,5 @@ struct ExamResult: View {
 
 #Preview {
     ExamResult(exam: .init())
+        .environmentObject(HomeViewModel())
 }

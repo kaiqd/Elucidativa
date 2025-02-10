@@ -27,7 +27,6 @@ class ExamCoreDataService: ExamRepository {
                 })
             }
         }
-        
         return examList
     }
     
@@ -46,7 +45,7 @@ class ExamCoreDataService: ExamRepository {
             
             coreDataStack.saveContext()
         } else {
-            print("Habit with ID \(id) not found.")
+            print("Exam with ID \(id) not found.")
         }
     }
 }

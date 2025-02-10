@@ -10,6 +10,7 @@ import SwiftUI
 struct AddReportSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var text: String = ""
+    @EnvironmentObject private var viewModel: HomeViewModel
     
     var body: some View {
         NavigationStack {
@@ -68,6 +69,17 @@ struct AddReportSheet: View {
             ToolbarItem(placement: .confirmationAction) {
                 Text("Enviar")
                     .foregroundStyle(text.isEmpty ? .gray : .mainStrongGreen)
+                    .onTapGesture {
+                        if !text.isEmpty {
+                            let exam = ExamModel(date: Date(),
+                                                 title: text,
+                                                 image: UIImage(resource: .mockExam).jpegData(compressionQuality: 1.0) ?? Data(),
+                                                 description: "Lorem ipsulon caraio")
+                            
+                            viewModel.addExam(exam: exam)
+                            dismiss()
+                        }
+                    }
             }
         }
     }
@@ -75,4 +87,5 @@ struct AddReportSheet: View {
 
 #Preview {
     AddReportSheet()
+        .environmentObject(HomeViewModel())
 }

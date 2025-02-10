@@ -10,7 +10,6 @@ import SwiftUI
 struct HomeView: View {
     @EnvironmentObject var viewModel: HomeViewModel
     @State private var navigate: Bool = false
-    @State private var selectedExam: ExamModel = .init()
     @State private var showSheet: Bool = false
     
     var body: some View {
@@ -49,11 +48,11 @@ struct HomeView: View {
                             .padding(.horizontal, 24)
                     } else {
                         ScrollView {
-                            ForEach(0..<ExamModel.mockExams.count, id: \.self) { index in
-                                SmallCard(exam: ExamModel.mockExams[index])
+                            ForEach(0..<viewModel.examsList.count, id: \.self) { index in
+                                SmallCard(exam: viewModel.examsList[index])
                                     .padding(.bottom, 4)
                                     .onTapGesture {
-                                        selectedExam = ExamModel.mockExams[index]
+                                        viewModel.selectedExam = viewModel.examsList[index]
                                         navigate.toggle()
                                     }
                             }
@@ -68,9 +67,11 @@ struct HomeView: View {
             }
             .sheet(isPresented: $showSheet, content: {
                 AddReportSheet()
+                    .environmentObject(viewModel)
             })
             .navigationDestination(isPresented: $navigate) {
-                ExamResult(exam: selectedExam)
+                ExamResult(exam: viewModel.selectedExam)
+                    .environmentObject(viewModel)
             }
             .navigationTitle("")
         }
