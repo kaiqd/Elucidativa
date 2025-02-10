@@ -73,7 +73,7 @@ struct AddReportSheet: View {
                         if !text.isEmpty {
                             let exam = ExamModel(date: Date(),
                                                  title: text,
-                                                 image: UIImage(resource: .mockExam).jpegData(compressionQuality: 1.0) ?? Data(),
+                                                 image: UIImage(resource: .mockExam).pngData() ?? Data(),
                                                  description: "Lorem ipsulon caraio")
                             
                             viewModel.addExam(exam: exam)
