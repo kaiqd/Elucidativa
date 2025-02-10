@@ -17,7 +17,10 @@ class HomeViewModel: ObservableObject {
     }
     
     func addExam(exam: ExamModel) {
-        persistenceService.addExam(exam: exam)
+        var examMock = exam
+        examMock.date = Date.now
+        examMock.description = "Alguma coisa"
+        persistenceService.addExam(exam: examMock)
         fetchData()
     }
     
