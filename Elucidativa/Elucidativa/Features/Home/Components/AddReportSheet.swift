@@ -6,11 +6,14 @@
 //
 
 import SwiftUI
+import PhotosUI
 
 struct AddReportSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var text: String = ""
     @EnvironmentObject private var viewModel: HomeViewModel
+    @State private var selectedItem: PhotosPickerItem?
+    @State private var selectedImage: UIImage?
     
     var body: some View {
         NavigationStack {
@@ -29,9 +32,15 @@ struct AddReportSheet: View {
                 }
                 .padding(.top, 20)
                 
-                CardGalery {
-                    print("Teste")
-                }
+                CardGalery(image: selectedImage, selectedItem: $selectedItem)
+                    .onChange(of: selectedItem) { newItem in
+                        Task {
+                            if let data = try? await newItem?.loadTransferable(type: Data.self),
+                               let uiImage = UIImage(data: data) {
+                                selectedImage = uiImage
+                            }
+                        }
+                    }
                 
                 Spacer()
             }
@@ -70,12 +79,11 @@ struct AddReportSheet: View {
                 Text("Enviar")
                     .foregroundStyle(text.isEmpty ? .gray : .mainStrongGreen)
                     .onTapGesture {
-                        if !text.isEmpty {
+                        if !text.isEmpty && selectedImage != nil {
                             let exam = ExamModel(date: Date(),
                                                  title: text,
-                                                 image: UIImage(resource: .mockExam).pngData() ?? Data(),
+                                                 image: selectedImage?.pngData() ?? Data(),
                                                  description: "Lorem ipsulon caraio")
-                            
                             viewModel.addExam(exam: exam)
                             dismiss()
                         }
