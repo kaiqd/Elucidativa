@@ -16,35 +16,45 @@ struct ExamResult: View {
             Color.background
                 .ignoresSafeArea()
             
-            VStack(alignment: .leading) {
-                Text(exam.description)
-                    .padding(12)
-                    .padding(.horizontal, 4)
-                    .foregroundColor(.black)
-                    .background(Color.white)
-                    .cornerRadius(12)
-                    .padding(.top, 24)
-                    .padding(.bottom, 16)
-                
-                Button {
+            ScrollView {
+                VStack(alignment: .leading) {
+                    Image(.mockExam)
+                        .resizable()
+                        .frame(maxWidth: 358, maxHeight: 200)
+                        .clipShape(.rect(cornerRadius: 12))
+                        .padding(.bottom, -8)
+                    
+                    Text(exam.description)
+                        .padding(12)
+                        .padding(.horizontal, 4)
+                        .foregroundColor(.black)
+                        .background(Color.white)
+                        .cornerRadius(12)
+                        .padding(.top, 24)
+                        .padding(.bottom, 16)
+                    
+                    Button {
 //                    showAlert = true
-                } label: {
-                    Text("Apagar Laudo")
-                        .fontWeight(.bold)
-                        .foregroundColor(.white)
-                        .font(.system(size: 16, weight: .semibold))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 16)
-                        .frame(maxWidth: .infinity)
-                        .background(.button)
-                        .cornerRadius(8)
+                    } label: {
+                        Text("Apagar Laudo")
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                            .font(.system(size: 16, weight: .semibold))
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 16)
+                            .frame(maxWidth: .infinity)
+                            .background(.button)
+                            .cornerRadius(8)
+                    }
+                    .buttonStyle(.plain)
+                    
+                    
+                    Spacer()
                 }
-                .buttonStyle(.plain)
-
-                
-                Spacer()
+                .padding(.horizontal, 16)
             }
-            .padding(.horizontal, 16)
+            .padding(.top, 8)
+            .scrollIndicators(.hidden)
         }
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {

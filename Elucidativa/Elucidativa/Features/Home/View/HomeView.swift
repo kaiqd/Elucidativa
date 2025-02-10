@@ -11,6 +11,7 @@ struct HomeView: View {
     @EnvironmentObject var viewModel: HomeViewModel
     @State private var navigate: Bool = false
     @State private var selectedExam: ExamModel = .init()
+    @State private var showSheet: Bool = false
     
     var body: some View {
         NavigationStack {
@@ -30,7 +31,7 @@ struct HomeView: View {
                         .padding(.trailing, 7)
                     
                     CardReport() {
-                        print("Teste")
+                        showSheet.toggle()
                     }
                     .padding(.bottom, 47)
                     
@@ -65,8 +66,12 @@ struct HomeView: View {
                 .padding(.top, 26)
                 .padding(.horizontal, 24)
             }
+            .sheet(isPresented: $showSheet, content: {
+                AddReportSheet()
+            })
             .navigationDestination(isPresented: $navigate) {
                 ExamResult(exam: selectedExam)
+                    .accentColor(.mainStrongGreen)
                     .onDisappear {
                         selectedExam = .init()
                     }
