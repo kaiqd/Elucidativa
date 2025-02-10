@@ -71,10 +71,6 @@ struct HomeView: View {
             })
             .navigationDestination(isPresented: $navigate) {
                 ExamResult(exam: selectedExam)
-                    .accentColor(.mainStrongGreen)
-                    .onDisappear {
-                        selectedExam = .init()
-                    }
             }
             .navigationTitle("")
         }

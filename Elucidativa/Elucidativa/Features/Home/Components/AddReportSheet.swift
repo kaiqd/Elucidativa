@@ -13,33 +13,38 @@ struct AddReportSheet: View {
     
     var body: some View {
         NavigationStack {
-            ZStack {
+            VStack {
+                TextField(text: $text) {
+                    Text("Nome do exame")
+                        .font(.system(size: 16, weight: .regular))
+                        .foregroundStyle(.black)
+                }
+                .foregroundStyle(.black)
+                .frame(height: 50)
+                .padding(.leading, 16)
+                .background {
+                    Color.white
+                        .clipShape(.rect(cornerRadius: 12))
+                }
+                .padding(.top, 20)
+                
+                CardGalery {
+                    print("Teste")
+                }
+                
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, -45)
+            .background {
                 Color.background
                     .ignoresSafeArea()
-                VStack {
-                    TextField(text: $text) {
-                        Text("Nome do exame")
-                            .font(.system(size: 16, weight: .regular))
-                            .foregroundStyle(.black)
+                    .onTapGesture {
+                        UIApplication.shared.endEditing()
                     }
-                    .frame(height: 50)
-                    .padding(.leading, 16)
-                    .background {
-                        Color.white
-                            .clipShape(.rect(cornerRadius: 12))
-                    }
-                    .padding(.horizontal, 16)
-                    
-                    CardGalery {
-                        print("Teste")
-                    }
-                    
-                    Spacer()
-                }
-                .padding(.top, -45)
-                .toolbar {
-                    toolBarItems
-                }
+            }
+            .toolbar {
+                toolBarItems
             }
         }
     }
@@ -56,6 +61,7 @@ struct AddReportSheet: View {
             
             ToolbarItem(placement: .principal) {
                 Text("Novo Laudo")
+                    .foregroundStyle(.black)
                     .font(.system(size: 16, weight: .semibold))
             }
             

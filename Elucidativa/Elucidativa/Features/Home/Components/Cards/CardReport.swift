@@ -20,7 +20,7 @@ struct CardReport: View {
                 .font(.system(size: 16, weight: .medium))
         }
         .foregroundStyle(.cardText)
-        .frame(maxWidth: 335, maxHeight: 147)
+        .frame(width: 335, height: 147)
         .background {
             Color.cardBackground
                 .clipShape(.rect(cornerRadius: 16))
