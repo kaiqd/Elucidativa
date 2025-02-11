@@ -35,7 +35,7 @@ struct ExamResult: View {
                             .padding(.top, 24)
                             .padding(.bottom, 16)
                     } else {
-                        Text(exam.description) // Caso falhe, exibe o texto bruto
+                        Text(exam.description)
                             .padding(12)
                             .padding(.horizontal, 4)
                             .foregroundColor(.black)
