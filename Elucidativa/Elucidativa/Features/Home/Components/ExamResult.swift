@@ -25,14 +25,25 @@ struct ExamResult: View {
                         .clipShape(.rect(cornerRadius: 12))
                         .padding(.bottom, -8)
                     
-                    Text(exam.description)
-                        .padding(12)
-                        .padding(.horizontal, 4)
-                        .foregroundColor(.black)
-                        .background(Color.white)
-                        .cornerRadius(12)
-                        .padding(.top, 24)
-                        .padding(.bottom, 16)
+                    if let attributedString = try? AttributedString(markdown: exam.description) {
+                        Text(attributedString)
+                            .padding(12)
+                            .padding(.horizontal, 4)
+                            .foregroundColor(.black)
+                            .background(Color.white)
+                            .cornerRadius(12)
+                            .padding(.top, 24)
+                            .padding(.bottom, 16)
+                    } else {
+                        Text(exam.description) // Caso falhe, exibe o texto bruto
+                            .padding(12)
+                            .padding(.horizontal, 4)
+                            .foregroundColor(.black)
+                            .background(Color.white)
+                            .cornerRadius(12)
+                            .padding(.top, 24)
+                            .padding(.bottom, 16)
+                    }
                     
                     Button {
                         viewModel.deleteExam(id: exam.id)
