@@ -25,7 +25,7 @@ struct ExamResult: View {
                         .clipShape(.rect(cornerRadius: 12))
                         .padding(.bottom, -8)
                     
-                    if let attributedString = try? AttributedString(markdown: exam.description) {
+                    if let attributedString = try? AttributedString(markdown: exam.description, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace)) {
                         Text(attributedString)
                             .padding(12)
                             .padding(.horizontal, 4)
@@ -34,6 +34,7 @@ struct ExamResult: View {
                             .cornerRadius(12)
                             .padding(.top, 24)
                             .padding(.bottom, 16)
+                            .lineLimit(nil)
                     } else {
                         Text(exam.description)
                             .padding(12)
