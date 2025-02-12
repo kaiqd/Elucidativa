@@ -8,11 +8,15 @@
 import SwiftUI
 import UIKit
 import Vision
+import Network
 
 class HomeViewModel: ObservableObject {
     private var persistenceService: ExamRepository = ExamCoreDataService()
     @Published var examsList: [ExamModel]
     @Published var selectedExam: ExamModel = .init()
+    private let networkMonitor = NWPathMonitor()
+    private let workerQueue = DispatchQueue(label: "Monitor")
+    var isConnected = false
     
     init() {
         self.examsList = persistenceService.fetchExams()
@@ -42,12 +46,19 @@ class HomeViewModel: ObservableObject {
         fetchData()
     }
     
+    func checkNetworkConnectivity() {
+        networkMonitor.pathUpdateHandler = { path in
+            self.isConnected = path.status == .satisfied
+        }
+        networkMonitor.start(queue: workerQueue)
+    }
+    
     private func fetchData() {
-        self.examsList = persistenceService.fetchExams()
+        DispatchQueue.main.async {
+            self.examsList = self.persistenceService.fetchExams()
+        }
     }
 }
-
-// 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
 
 
 func extractText(from image: UIImage, completion: @escaping (String) -> Void) {

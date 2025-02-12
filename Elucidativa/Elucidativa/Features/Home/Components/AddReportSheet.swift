@@ -14,6 +14,7 @@ struct AddReportSheet: View {
     @EnvironmentObject private var viewModel: HomeViewModel
     @State private var selectedItem: PhotosPickerItem?
     @State private var selectedImage: UIImage?
+    @State private var showAlert: Bool = false
     
     var body: some View {
         NavigationStack {
@@ -53,8 +54,16 @@ struct AddReportSheet: View {
                         UIApplication.shared.endEditing()
                     }
             }
+            .modifier(AlertMessageDeleteCard(isShowing: $showAlert, action: {
+//                viewModel.checkNetworkConnectivity()
+//                showAlert = viewModel.isConnected
+            }))
             .toolbar {
                 toolBarItems
+            }
+            .onAppear {
+                viewModel.checkNetworkConnectivity()
+                showAlert = viewModel.isConnected
             }
         }
     }
@@ -79,13 +88,18 @@ struct AddReportSheet: View {
                 Text("Enviar")
                     .foregroundStyle(text.isEmpty ? .gray : .mainStrongGreen)
                     .onTapGesture {
+                        viewModel.checkNetworkConnectivity()
+                        showAlert = !viewModel.isConnected
+                        
                         if !text.isEmpty && selectedImage != nil {
                             let exam = ExamModel(date: Date(),
                                                  title: text,
                                                  image: selectedImage?.pngData() ?? Data(),
                                                  description: "Lorem ipsulon caraio")
-                            viewModel.addExam(exam: exam)
-                            dismiss()
+                            if !showAlert {
+                                dismiss()
+                                viewModel.addExam(exam: exam)
+                            }
                         }
                     }
             }
