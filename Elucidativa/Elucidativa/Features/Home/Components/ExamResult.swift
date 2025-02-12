@@ -50,7 +50,7 @@ struct ExamResult: View {
                         viewModel.deleteExam(id: exam.id)
                         dismiss()
                     } label: {
-                        Text("Apagar Laudo")
+                        Text(NSLocalizedString("DeleteReport", comment: ""))
                             .fontWeight(.bold)
                             .foregroundColor(.white)
                             .font(.system(size: 16, weight: .semibold))
@@ -73,7 +73,7 @@ struct ExamResult: View {
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 Button(action: { dismiss() }, label: {
-                    Text("Voltar")
+                    Text(NSLocalizedString("Back", comment: ""))
                         .font(.system(size: 16, weight: .regular))
                         .foregroundStyle(.mainStrongGreen)
                         .offset(x: -22)

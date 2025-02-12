@@ -20,7 +20,7 @@ struct AddReportSheet: View {
         NavigationStack {
             VStack {
                 TextField(text: $text) {
-                    Text("Nome do exame")
+                    Text(NSLocalizedString("TestName", comment: ""))
                         .font(.system(size: 16, weight: .regular))
                         .foregroundStyle(.black)
                 }
@@ -71,7 +71,7 @@ struct AddReportSheet: View {
     private var toolBarItems: some ToolbarContent {
         Group {
             ToolbarItem(placement: .cancellationAction) {
-                Text("Cancelar")
+                Text(NSLocalizedString("Cancel", comment: ""))
                     .foregroundStyle(.mainText)
                     .onTapGesture {
                         dismiss()
@@ -79,13 +79,13 @@ struct AddReportSheet: View {
             }
             
             ToolbarItem(placement: .principal) {
-                Text("Novo Laudo")
+                Text(NSLocalizedString("NewReport", comment: ""))
                     .foregroundStyle(.black)
                     .font(.system(size: 16, weight: .semibold))
             }
             
             ToolbarItem(placement: .confirmationAction) {
-                Text("Enviar")
+                Text(NSLocalizedString("Send", comment: ""))
                     .foregroundStyle(text.isEmpty ? .gray : .mainStrongGreen)
                     .onTapGesture {
                         viewModel.checkNetworkConnectivity()

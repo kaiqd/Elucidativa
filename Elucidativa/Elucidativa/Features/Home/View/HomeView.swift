@@ -23,7 +23,7 @@ struct HomeView: View {
                         .foregroundStyle(.mainText)
                         .padding(.bottom, 8)
                     
-                    Text("Envie uma foto do seu laudo e receba uma explicação em linguagem simples e acessível.")
+                    Text(NSLocalizedString("AppExplanation", comment: ""))
                         .font(.system(size: 16, weight: .medium))
                         .foregroundStyle(.black)
                         .padding(.bottom, 16)
@@ -34,14 +34,14 @@ struct HomeView: View {
                     }
                     .padding(.bottom, 47)
                     
-                    Text("Meus Laudos")
+                    Text(NSLocalizedString("Reports", comment: ""))
                         .font(.system(size: 28, weight: .bold))
                         .foregroundStyle(.mainText)
                         .padding(.bottom, 8)
                         .padding(.bottom, viewModel.examsList.isEmpty ? 70 : 0)
                     
                     if viewModel.examsList.isEmpty {
-                        Text("Nenhum resultado de laudo ainda cadastrado")
+                        Text(NSLocalizedString("NoReports", comment: ""))
                             .font(.system(size: 20, weight: .bold))
                             .multilineTextAlignment(.center)
                             .foregroundStyle(.cardTextGalery)

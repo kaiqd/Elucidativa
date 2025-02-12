@@ -27,7 +27,7 @@ struct CardGalery: View {
                             .resizable()
                             .frame(width: 33, height: 43)
                         
-                        Text("Selecionar foto da galeria")
+                        Text(NSLocalizedString("SelectPhoto", comment: ""))
                             .font(.system(size: 20, weight: .regular))
                     }
                     .foregroundStyle(.cardTextGalery)

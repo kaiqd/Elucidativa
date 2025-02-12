@@ -16,7 +16,7 @@ struct CardReport: View {
                 .resizable()
                 .frame(width: 43, height: 48)
             
-            Text("Adicionar um laudo")
+            Text(NSLocalizedString("AddReport", comment: ""))
                 .font(.system(size: 16, weight: .medium))
         }
         .foregroundStyle(.cardText)
