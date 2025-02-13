@@ -61,10 +61,10 @@ struct AddReportSheet: View {
             .toolbar {
                 toolBarItems
             }
-            .onAppear {
-                viewModel.checkNetworkConnectivity()
-                showAlert = viewModel.isConnected
-            }
+//            .onAppear {
+//                viewModel.checkNetworkConnectivity()
+//                showAlert = viewModel.isConnected
+//            }
         }
     }
     
@@ -88,18 +88,18 @@ struct AddReportSheet: View {
                 Text(NSLocalizedString("Send", comment: ""))
                     .foregroundStyle(text.isEmpty ? .gray : .mainStrongGreen)
                     .onTapGesture {
-                        viewModel.checkNetworkConnectivity()
-                        showAlert = !viewModel.isConnected
+//                        viewModel.checkNetworkConnectivity()
+//                        showAlert = !viewModel.isConnected
                         
                         if !text.isEmpty && selectedImage != nil {
                             let exam = ExamModel(date: Date(),
                                                  title: text,
                                                  image: selectedImage?.pngData() ?? Data(),
                                                  description: "Lorem ipsulon caraio")
-                            if !showAlert {
+//                            if !showAlert {
                                 dismiss()
                                 viewModel.addExam(exam: exam)
-                            }
+//                            }
                         }
                     }
             }

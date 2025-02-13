@@ -121,7 +121,7 @@ func sendToGPT(text: String, completion: @escaping (String) -> Void) {
     """
     
     let body: [String: Any] = [
-        "model": "gpt-3.5-turbo-0125",
+        "model": "gpt-4",
         "messages": [
             [
                 "role": "system",
