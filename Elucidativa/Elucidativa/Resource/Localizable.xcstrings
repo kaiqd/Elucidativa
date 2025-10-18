@@ -4,6 +4,12 @@
     "" : {
 
     },
+    "Ação do +" : {
+
+    },
+    "Ação do botão +" : {
+
+    },
     "AddReport" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -72,6 +78,15 @@
     "Elucidativa" : {
 
     },
+    "Exames" : {
+
+    },
+    "Início" : {
+
+    },
+    "Luci" : {
+
+    },
     "Nenhuma rede detectada. Conecte-se ao Wi-Fi ou à rede móvel e tente novamente." : {
 
     },
@@ -110,6 +125,9 @@
       }
     },
     "OK" : {
+
+    },
+    "Perfil" : {
 
     },
     "Reports" : {
@@ -176,6 +194,9 @@
           }
         }
       }
+    },
+    "Y Offset: %lld" : {
+
     }
   },
   "version" : "1.0"
