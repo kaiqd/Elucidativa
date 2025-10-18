@@ -4,10 +4,13 @@
     "" : {
 
     },
-    "Ação do +" : {
+    "%lld" : {
 
     },
-    "Ação do botão +" : {
+    "•" : {
+
+    },
+    "Ação do +" : {
 
     },
     "AddReport" : {
@@ -26,6 +29,9 @@
           }
         }
       }
+    },
+    "Adicionar Exame" : {
+
     },
     "AppExplanation" : {
       "extractionState" : "manual",
@@ -46,6 +52,9 @@
     },
     "Back" : {
       "extractionState" : "manual"
+    },
+    "Buscar exames..." : {
+
     },
     "Cancel" : {
       "extractionState" : "manual",
@@ -75,7 +84,16 @@
         }
       }
     },
+    "Digite sua dúvida..." : {
+
+    },
     "Elucidativa" : {
+
+    },
+    "Enviar novo exame" : {
+
+    },
+    "Estou aqui para te ajudar a entender seus exames de forma simples e clara." : {
 
     },
     "Exames" : {
@@ -85,6 +103,12 @@
 
     },
     "Luci" : {
+
+    },
+    "Nenhum exame encontrado." : {
+
+    },
+    "Nenhuma conversa encontrada." : {
 
     },
     "Nenhuma rede detectada. Conecte-se ao Wi-Fi ou à rede móvel e tente novamente." : {
@@ -124,6 +148,12 @@
         }
       }
     },
+    "Nova Conversa" : {
+
+    },
+    "Oi, eu sou a Luci!" : {
+
+    },
     "OK" : {
 
     },
@@ -146,6 +176,9 @@
           }
         }
       }
+    },
+    "Seja bem vindo(a)," : {
+
     },
     "SelectPhoto" : {
       "extractionState" : "manual",
@@ -194,6 +227,9 @@
           }
         }
       }
+    },
+    "Tire uma foto ou envie o PDF" : {
+
     },
     "Y Offset: %lld" : {
 

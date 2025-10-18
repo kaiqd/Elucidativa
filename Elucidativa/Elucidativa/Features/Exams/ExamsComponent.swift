@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+// MARK: - Nível de interpretação (cores)
 enum InterpretationLevel: String {
     case normal    = "Normal"
     case attention = "Atenção"
@@ -15,24 +16,13 @@ enum InterpretationLevel: String {
 
     var tint: Color {
         switch self {
-        case .normal:    return Color(hue: 0.47, saturation: 0.55, brightness: 0.66)  // verde
-        case .attention: return Color(hue: 0.12, saturation: 0.80, brightness: 0.90)  // amarelo
+        case .normal:    return Color.normal
+        case .attention: return Color.atencao
         case .high:      return Color(hue: 0.07, saturation: 0.80, brightness: 0.90)  // laranja
-        case .critical:  return Color(hue: 0.00, saturation: 0.78, brightness: 0.90)  // vermelho
+        case .critical:  return Color.urgente
         }
     }
     var pillBackground: Color { tint.opacity(0.15) }
-}
-
-struct Chip: View {
-    let text: String
-    var body: some View {
-        Text(text)
-            .font(.subheadline)
-            .padding(.horizontal, 12).padding(.vertical, 8)
-            .background(Color(.systemGray6))
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-    }
 }
 
 struct StatusPill: View {
@@ -51,7 +41,6 @@ struct StatusPill: View {
 }
 
 struct ExamCardView: View {
-    // Conteúdos
     let name: String
     let urgency: String?
     let dateText: String
@@ -59,29 +48,24 @@ struct ExamCardView: View {
     let examType: String
     let deliveryFormat: String
     let level: InterpretationLevel
+    let descriptionText: String
 
-    // Dimensão fixa
-    var width: CGFloat = 327
-    var height: CGFloat = 120
+    var minHeight: CGFloat = 120
 
-    // Constantes visuais
     private let corner: CGFloat = 20
     private let stripeWidth: CGFloat = 6
-    private let stripeInsetLeading: CGFloat = 0   // distância da borda interna
-    private let stripeXOffset: CGFloat = -1       // empurra levemente p/ a esquerda
-    private let stripeTopBottomInset: CGFloat = 6 // encurta um pouco a altura
+    private let stripeInsetLeading: CGFloat = 0
+    private let stripeXOffset: CGFloat = -1
+    private let stripeTopBottomInset: CGFloat = 6
     private let contentPadding: CGFloat = 16
 
     var body: some View {
         ZStack(alignment: .leading) {
-            // Camada com sombra (não é clipada)
             RoundedRectangle(cornerRadius: corner, style: .continuous)
                 .fill(Color(.systemBackground))
                 .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 3)
 
-            // Conteúdo + listra, CLIPADOS pelo mesmo corner
             ZStack(alignment: .leading) {
-                // LIStra
                 Rectangle()
                     .fill(level.tint)
                     .frame(width: stripeWidth)
@@ -89,12 +73,11 @@ struct ExamCardView: View {
                     .padding(.vertical, stripeTopBottomInset)
                     .offset(x: stripeXOffset)
 
-                // Conteúdo textual
                 VStack(alignment: .leading, spacing: 10) {
                     HStack(alignment: .firstTextBaseline) {
                         HStack(spacing: 8) {
                             Text(name)
-                                .font(.title3.weight(.semibold))
+                                .font(.system(size: 15.6, weight: .semibold))
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.85)
 
@@ -107,7 +90,6 @@ struct ExamCardView: View {
                                     .clipShape(Capsule())
                             }
                         }
-
                         Spacer(minLength: 8)
                         StatusPill(level: level)
                     }
@@ -117,48 +99,48 @@ struct ExamCardView: View {
                         Text("•").opacity(0.4)
                         Text(place)
                     }
-                    .font(.callout)
+                    .font(.system(size: 12.6))
                     .foregroundStyle(.secondary)
 
-                    HStack(spacing: 12) {
-                        Chip(text: examType)
-                        Chip(text: deliveryFormat)
-                        Spacer()
-                    }
-                    .padding(.top, 2)
+                    Text(descriptionText)
+                        .font(.system(size: 13.6))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, 2)
                 }
                 .padding(contentPadding)
             }
             .clipShape(RoundedRectangle(cornerRadius: corner, style: .continuous))
         }
-        .frame(width: width, height: height)
+        .frame(maxWidth: .infinity)   // ⬅️ ocupa toda a largura disponível
+        .frame(minHeight: minHeight)
     }
 }
 
-#Preview("Normal") {
-    ExamCardView(
-        name: "Colesterol e Frações",
-        urgency: nil,
-        dateText: "28/10",
-        place: "Lab Delboni",
-        examType: "Sangue",
-        deliveryFormat: "PDF",
-        level: .normal
-    )
-    .padding()
-    .background(Color(.secondarySystemBackground))
-}
-
-#Preview("Crítico + Urgência") {
-    ExamCardView(
-        name: "PCR Alta Sensibilidade",
-        urgency: "URGENTE",
-        dateText: "12/09",
-        place: "Fleury",
-        examType: "Sangue",
-        deliveryFormat: "PDF",
-        level: .critical
-    )
+// MARK: - Previews
+#Preview("Descrição obrigatória") {
+    VStack(spacing: 18) {
+        ExamCardView(
+            name: "Hemograma Completo",
+            urgency: nil,
+            dateText: "Há 2 dias",
+            place: "Lab Sabin",
+            examType: "Sangue",
+            deliveryFormat: "PDF",
+            level: .normal,
+            descriptionText: "Todos os valores estão dentro do esperado. Suas células do sangue estão funcionando bem!"
+        )
+        ExamCardView(
+            name: "Glicemia em Jejum",
+            urgency: nil,
+            dateText: "Há 1 semana",
+            place: "Lab Fleury",
+            examType: "Sangue",
+            deliveryFormat: "PDF",
+            level: .attention,
+            descriptionText: "Glicose um pouco elevada (115 mg/dL). Vale conversar com seu médico sobre alimentação."
+        )
+    }
     .padding()
     .background(Color(.secondarySystemBackground))
 }
