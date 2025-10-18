@@ -10,6 +10,15 @@ import UIKit
 import Vision
 import Network
 
+// Struct to decode the JSON response from GPT
+struct GPTExamResponse: Decodable {
+    let nome: String
+    let lugar: String
+    let tipoDeExame: String
+    let nivel: String // "Normal", "Atencao", "Urgente"
+    let descricao: String
+}
+
 class HomeViewModel: ObservableObject {
     private var persistenceService: ExamRepository = ExamCoreDataService()
     @Published var examsList: [ExamModel]
@@ -22,22 +31,51 @@ class HomeViewModel: ObservableObject {
         self.examsList = persistenceService.fetchExams()
     }
     
-    func addExam(exam: ExamModel) {
-        var examMock = exam
-        examMock.date = Date.now
+    func addExam(imageData: Data, formaDeEntrega: String) {
+        guard let image = UIImage(data: imageData) else {
+            print("Error: Could not create UIImage from data.")
+            return
+        }
         
-        if let image = UIImage(data: examMock.image) {
-            extractText(from: image) { extractedText in
-                sendToGPT(text: extractedText) { gptResponse in
-                    examMock.description = gptResponse
-                    self.persistenceService.addExam(exam: examMock)
+        extractText(from: image) { [weak self] extractedText in
+            guard let self = self, let text = extractedText, !text.isEmpty else {
+                print("Error: Could not extract text from image.")
+                return
+            }
+            
+            self.sendToGPT(text: text) { result in
+                switch result {
+                case .success(let gptResponse):
+                    let nivel: InterpretationLevel
+                    switch gptResponse.nivel.lowercased() {
+                    case "normal":
+                        nivel = .normal
+                    case "atencao":
+                        nivel = .attention
+                    case "urgente":
+                        nivel = .critical
+                    default:
+                        nivel = .normal
+                    }
+                    
+                    let newExam = ExamModel(
+                        date: Date(),
+                        title: gptResponse.nome,
+                        image: imageData,
+                        description: gptResponse.descricao,
+                        lugar: gptResponse.lugar,
+                        tipoDeExame: gptResponse.tipoDeExame,
+                        nivel: nivel,
+                        formaDeEntrega: formaDeEntrega
+                    )
+                    
+                    self.persistenceService.addExam(exam: newExam)
                     self.fetchData()
+                    
+                case .failure(let error):
+                    print("Error sending to GPT: \(error.localizedDescription)")
                 }
             }
-        } else {
-            examMock.description = "Imagem inválida ou não encontrada."
-            persistenceService.addExam(exam: examMock)
-            fetchData()
         }
     }
     
@@ -58,118 +96,149 @@ class HomeViewModel: ObservableObject {
             self.examsList = self.persistenceService.fetchExams()
         }
     }
-}
-
-
-func extractText(from image: UIImage, completion: @escaping (String) -> Void) {
-    guard let cgImage = image.cgImage else {
-        completion("Erro: A imagem não pôde ser convertida para CGImage.")
-        return
-    }
     
-    let request = VNRecognizeTextRequest { (request, error) in
-        if let error = error {
-            completion("Erro ao realizar OCR: \(error.localizedDescription)")
+    // MARK: - Private Helper Functions
+    
+    private func extractText(from image: UIImage, completion: @escaping (String?) -> Void) {
+        guard let cgImage = image.cgImage else {
+            completion(nil)
             return
         }
         
-        var recognizedText = ""
-        
-        // Processando as observações de texto reconhecido
-        for observation in request.results as? [VNRecognizedTextObservation] ?? [] {
-            if let topCandidate = observation.topCandidates(1).first {
-                recognizedText += topCandidate.string + "\n"
+        let request = VNRecognizeTextRequest { (request, error) in
+            if let error = error {
+                print("OCR Error: \(error.localizedDescription)")
+                completion(nil)
+                return
             }
+            
+            let recognizedText = request.results as? [VNRecognizedTextObservation] ?? []
+            let topCandidateTexts = recognizedText.compactMap { $0.topCandidates(1).first?.string }
+            let fullText = topCandidateTexts.joined(separator: "\n")
+            
+            completion(fullText.isEmpty ? nil : fullText)
         }
         
-        // Se não houver texto, retornamos uma mensagem padrão
-        completion(recognizedText.isEmpty ? "Nenhum texto encontrado." : recognizedText)
+        request.recognitionLevel = .accurate
+        request.usesLanguageCorrection = true
+        
+        let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+        do {
+            try handler.perform([request])
+        } catch {
+            print("Error performing OCR: \(error.localizedDescription)")
+            completion(nil)
+        }
     }
-    
-    // Configuração do nível de reconhecimento de texto
-    request.recognitionLevel = .accurate
-    request.usesLanguageCorrection = true
-    
-    let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
-    do {
-        try handler.perform([request])
-    } catch {
-        completion("Erro ao processar a imagem: \(error.localizedDescription)")
-    }
-}
 
-func sendToGPT(text: String, completion: @escaping (String) -> Void) {
-    let url = URL(string: "https://api.openai.com/v1/chat/completions")!
-    
-    var request = URLRequest(url: url)
-    request.httpMethod = "POST"
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.setValue("Bearer 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", forHTTPHeaderField: "Authorization")
-    
-    let prompt = """
-    Você é um sistema especializado em explicar termos médicos e científicos de forma acessível a pessoas leigas. Sua missão é receber um laudo de exame médico e fornecer uma explicação concisa sobre os achados descritos para o paciente, utilizando uma linguagem simples e compreensível para um estudante do ensino fundamental.
+    private func sendToGPT(text: String, completion: @escaping (Result<GPTExamResponse, Error>) -> Void) {
+        let url = URL(string: "https://api.openai.com/v1/chat/completions")!
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        // IMPORTANT: Replace with your actual OpenAI API key.
+        request.setValue("Bearer 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", forHTTPHeaderField: "Authorization")
+        
+        let systemMessage = "Você é um sistema especializado em explicar termos médicos e científicos de forma acessível a pessoas leigas. Sua missão é receber um laudo de exame médico e fornecer uma explicação concisa sobre os achados descritos para o paciente, utilizando uma linguagem simples e compreensível para um estudante do ensino fundamental."
 
-    Estrutura do texto de saída:
+        let userPrompt = """
+        Analise o seguinte texto de um laudo de exame médico e extraia as informações solicitadas.
+        Responda APENAS com um objeto JSON válido.
 
-    Resumo dos resultados:Inicie com um parágrafo resumindo o propósito do exame e destacando se há algum achado anormal. Se não houver, informe que nada de errado foi identificado.
+        O JSON deve ter a seguinte estrutura:
+        {
+          "nome": "Nome do Exame",
+          "lugar": "Nome do Laboratório ou Hospital",
+          "tipoDeExame": "Tipo de exame (ex: Sangue, Urina, Imagem)",
+          "nivel": "Classifique a gravidade em uma das três opções: 'Normal', 'Atencao' ou 'Urgente'",
+          "descricao": "A explicação concisa e simples dos resultados, seguindo a sua missão de ser um assistente acessível."
+        }
 
-    Explicação da gravidade:Caso haja algum achado anormal, explique a gravidade de maneira clara e simples, enfatizando que a palavra final sempre deve vir do médico responsável pelo caso.
-
-    Achados críticos (se aplicável):Se houver achados críticos que necessitem atenção imediata, chame atenção com emojis e incentive a pessoa a marcar uma consulta de retorno o mais rápido possível.
-
-    Texto extraído do laudo: \(text)
-    """
-    
-    let body: [String: Any] = [
-        "model": "gpt-4",
-        "messages": [
-            [
-                "role": "system",
-                "content": "Você é um assistente médico que ajuda a traduzir laudos médicos em uma linguagem acessível."
+        Texto do Laudo:
+        ---
+        \(text)
+        ---
+        """
+        
+        let body: [String: Any] = [
+            "model": "gpt-4o-mini",
+            "messages": [
+                [
+                    "role": "system",
+                    "content": systemMessage
+                ],
+                [
+                    "role": "user",
+                    "content": userPrompt
+                ]
             ],
-            [
-                "role": "user",
-                "content": prompt
-            ]
-        ],
-        "max_tokens": 1024,
-        "temperature": 0.5
-    ]
-    
-    do {
-        request.httpBody = try JSONSerialization.data(withJSONObject: body, options: [])
-    } catch {
-        completion("Erro ao criar o corpo da requisição: \(error.localizedDescription)")
-        return
-    }
-    
-    let task = URLSession.shared.dataTask(with: request) { data, response, error in
-        if let error = error {
-            completion("Erro na requisição: \(error.localizedDescription)")
-            return
-        }
-        
-        guard let data = data else {
-            completion("Erro: Não foi possível receber dados.")
-            return
-        }
+            "max_tokens": 1024,
+            "temperature": 0.2,
+            "response_format": ["type": "json_object"]
+        ]
         
         do {
-            // Parse da resposta JSON
-            if let jsonResponse = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
-               let choices = jsonResponse["choices"] as? [[String: Any]],
-               let message = choices.first?["message"] as? [String: Any],
-               let content = message["content"] as? String {
-                completion(content) // Envia o texto gerado pelo GPT
-            } else {
-                completion("Erro ao processar a resposta do GPT.")
-            }
+            request.httpBody = try JSONSerialization.data(withJSONObject: body, options: [])
         } catch {
-            completion("Erro ao parsear a resposta JSON: \(error.localizedDescription)")
+            completion(.failure(error))
+            return
         }
+        
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            
+            guard let data = data else {
+                let noDataError = NSError(domain: "GPTError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No data received from GPT."])
+                completion(.failure(noDataError))
+                return
+            }
+            
+            print("--- Raw GPT Response ---")
+            print(String(data: data, encoding: .utf8) ?? "Could not print data")
+            print("------------------------")
+            
+            do {
+                let openAIResponse = try JSONDecoder().decode(OpenAIResponse.self, from: data)
+                guard let content = openAIResponse.choices.first?.message.content else {
+                    let parsingError = NSError(domain: "GPTError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Could not find content in GPT response."])
+                    completion(.failure(parsingError))
+                    return
+                }
+
+                guard let contentData = content.data(using: .utf8) else {
+                    let dataError = NSError(domain: "GPTError", code: 2, userInfo: [NSLocalizedDescriptionKey: "Could not convert content string to data."])
+                    completion(.failure(dataError))
+                    return
+                }
+
+                let gptResponse = try JSONDecoder().decode(GPTExamResponse.self, from: contentData)
+                DispatchQueue.main.async {
+                    completion(.success(gptResponse))
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    completion(.failure(error))
+                }
+            }
+        }
+        
+        task.resume()
     }
-    
-    task.resume()
 }
 
-
+//// Helper structs for decoding the full OpenAI response
+//struct OpenAIResponse: Decodable {
+//    let choices: [Choice]
+//}
+//
+//struct Choice: Decodable {
+//    let message: Message
+//}
+//
+//struct Message: Decodable {
+//    let content: String
+//}

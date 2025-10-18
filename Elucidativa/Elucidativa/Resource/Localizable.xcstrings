@@ -1,9 +1,6 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "" : {
-
-    },
     "%lld" : {
 
     },
@@ -87,9 +84,6 @@
     "Digite sua dúvida..." : {
 
     },
-    "Elucidativa" : {
-
-    },
     "Enviar novo exame" : {
 
     },
@@ -108,7 +102,10 @@
     "Nenhum exame encontrado." : {
 
     },
-    "Nenhuma conversa encontrada." : {
+    "Nenhum exame recente." : {
+
+    },
+    "Nenhuma conversa anterior." : {
 
     },
     "Nenhuma rede detectada. Conecte-se ao Wi-Fi ou à rede móvel e tente novamente." : {

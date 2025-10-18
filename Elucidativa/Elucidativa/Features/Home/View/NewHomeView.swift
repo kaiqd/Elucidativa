@@ -30,43 +30,41 @@ private struct SectionHeader: View {
 }
 
 struct NewHomeView: View {
-    // ⬇️ Estado para o popup e fluxo (mesmo dos botões da tab bar)
+    @EnvironmentObject var viewModel: HomeViewModel
     @State private var showAddPopup = false
     @StateObject private var addFlow = AddExamFlow()
-
-    private let examsMock: [(name: String, date: String, place: String, type: String, format: String, level: InterpretationLevel, desc: String)] = [
-        ("Hemograma Completo", "Há 2 dias", "Lab Sabin", "Sangue", "PDF", .normal,
-         "Todos os valores estão dentro do esperado. Suas células do sangue estão funcionando bem!"),
-        ("Glicemia em Jejum", "Há 1 semana", "Lab Fleury", "Sangue", "PDF", .attention,
-         "Glicose um pouco elevada (115 mg/dL). Vale conversar com seu médico sobre alimentação."),
-        ("Colesterol Total", "Há 2 semanas", "Lab Delboni", "Sangue", "PDF", .normal,
-         "Colesterol controlado! LDL e HDL em níveis saudáveis.")
-    ]
 
     var body: some View {
         ZStack {
             ScrollView {
                 VStack(spacing: 24) {
 
-                    // ✅ Toca no card → abre o popup de adicionar exame
                     AddExamCard(onTap: { showAddPopup = true  })
                         .padding(.top, 8)
 
-                    SectionHeader(title: "Exames recentes", trailingTitle: "Ver todos") { }
+                    SectionHeader(title: "Exames recentes", trailingTitle: "Ver todos") {
+                        // TODO: Navigate to ExamsView
+                    }
                         .padding(.top, 4)
 
                     VStack(spacing: 20) {
-                        ForEach(Array(examsMock.enumerated()), id: \.offset) { _, e in
-                            ExamCardView(
-                                name: e.name,
-                                urgency: nil,
-                                dateText: e.date,
-                                place: e.place,
-                                examType: e.type,
-                                deliveryFormat: e.format,
-                                level: e.level,
-                                descriptionText: e.desc
-                            )
+                        if viewModel.examsList.isEmpty {
+                            Text("Nenhum exame recente.")
+                                .foregroundStyle(.secondary)
+                                .padding()
+                        } else {
+                            ForEach(viewModel.examsList) { exam in
+                                ExamCardView(
+                                    name: exam.title,
+                                    urgency: nil,
+                                    dateText: exam.date.formattedString(),
+                                    place: exam.lugar,
+                                    examType: exam.tipoDeExame,
+                                    deliveryFormat: exam.formaDeEntrega,
+                                    level: exam.nivel,
+                                    descriptionText: exam.description
+                                )
+                            }
                         }
                     }
                     .padding(.horizontal, 16)
@@ -123,9 +121,39 @@ struct NewHomeView: View {
         .alert(item: $addFlow.alert) { item in
             Alert(title: Text(item.title), message: Text(item.message), dismissButton: .default(Text("OK")))
         }
+        .onChange(of: addFlow.capturedImage) { image in
+            guard let img = image, let data = img.jpegData(compressionQuality: 0.8) else { return }
+            viewModel.addExam(imageData: data, formaDeEntrega: "imagem")
+            addFlow.capturedImage = nil
+        }
+        .onChange(of: addFlow.pickedImage) { image in
+            guard let img = image, let data = img.jpegData(compressionQuality: 0.8) else { return }
+            viewModel.addExam(imageData: data, formaDeEntrega: "imagem")
+            addFlow.pickedImage = nil
+        }
+        .onChange(of: addFlow.pickedFileURL) { fileURL in
+            guard let url = fileURL else { return }
+            
+            let isAccessing = url.startAccessingSecurityScopedResource()
+            defer {
+                if isAccessing {
+                    url.stopAccessingSecurityScopedResource()
+                }
+            }
+            
+            if url.pathExtension.lowercased() == "pdf" {
+                print("PDF processing not implemented yet.")
+            } else { // Assume it's an image
+                if let imageData = try? Data(contentsOf: url) {
+                    viewModel.addExam(imageData: imageData, formaDeEntrega: "imagem")
+                }
+            }
+            addFlow.pickedFileURL = nil
+        }
     }
 }
 
 #Preview {
     NewHomeView()
+        .environmentObject(HomeViewModel())
 }

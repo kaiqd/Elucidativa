@@ -174,127 +174,99 @@ struct LuciHeader: View {
 // MARK: - LuciView (tela)
 struct LuciView: View {
     @State private var query: String = ""
-    @State private var selected: LuciFilter = .todas
-
-    // Navegação para Chat
-    @State private var openChat = false
-
-    private let gapAfterIntro: CGFloat = 12       // entre "Estou aqui..." e busca
-    private let gapBeforeHistory: CGFloat = 16    // entre "Nova Conversa" e histórico
-
-    // Mock das conversas recentes
-    private let recents: [(title: String, preview: String, time: String, unread: Int)] = [
-        ("Dúvidas sobre Hemograma", "Luci: A hemoglobina é como um \"táxi\"...", "14:30", 8),
-        ("Análise de Glicemia", "Você: Minha glicose está em 115 mg/dL...", "Ontem", 3),
-        ("Colesterol e Alimentação", "✓  Luci: Alimentação balanceada ajuda mu...", "Ter", 0),
-        ("Tireoide - TSH e T4", "Você: Explica o que é TSH?", "Seg", 0),
-        ("Vitamina D e Suplementação", "Luci: Exposição solar de 15 minutos...", "Dom", 0),
-    ]
+    @State private var selectedFilter: LuciFilter = .todas
+    
+    @State private var conversations: [ConversationModel] = []
+    @State private var path = NavigationPath()
+    
+    private let chatService: ChatRepository = ChatCoreDataService()
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 20) {
+        NavigationStack(path: $path) {
+            ScrollView {
+                VStack(spacing: 20) {
 
-                // Header
-                LuciHeader(avatar: nil)
+                    // Header
+                    LuciHeader(avatar: nil)
 
-                // Busca
-                HStack(spacing: 12) {
-                    SearchField(text: $query)
-                    Button { hideKeyboard() } label: {
-                        Circle()
-                            .fill(Color("tabBarSelected"))
-                            .frame(width: 48, height: 48)
-                            .overlay(
-                                Image(systemName: "magnifyingglass")
-                                    .font(.system(size: 20, weight: .semibold))
-                                    .foregroundStyle(.white)
-                            )
-                    }
-                    .buttonStyle(.plain)
-                }
-                .padding(.horizontal, 16)
-                .padding(.top, gapAfterIntro)
-
-                // Filtros
-                ScrollView(.horizontal, showsIndicators: false) {
+                    // Busca
                     HStack(spacing: 12) {
-                        ForEach(LuciFilter.allCases) { f in
-                            FilterChip(title: f.rawValue, isSelected: f == selected) {
-                                selected = f
+                        SearchField(text: $query)
+                        Button { hideKeyboard() } label: {
+                            Circle()
+                                .fill(Color("tabBarSelected"))
+                                .frame(width: 48, height: 48)
+                                .overlay(
+                                    Image(systemName: "magnifyingglass")
+                                        .font(.system(size: 20, weight: .semibold))
+                                        .foregroundStyle(.white)
+                                )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 12)
+
+                    // Filtros
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 12) {
+                            ForEach(LuciFilter.allCases) { f in
+                                FilterChip(title: f.rawValue, isSelected: f == selectedFilter) {
+                                    selectedFilter = f
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                    }
+
+                    // Botão Nova conversa → abre ChatView
+                    NewConversationButton {
+                        let newConversation = chatService.createConversation()
+                        conversations.insert(newConversation, at: 0)
+                        path.append(newConversation)
+                    }
+                    .padding(.horizontal, 16)
+
+                    // Conversation History List
+                    VStack(alignment: .leading, spacing: 0) {
+                        if conversations.isEmpty {
+                            Text("Nenhuma conversa anterior.")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                                .frame(maxWidth: .infinity, alignment: .center)
+                                .padding(.vertical, 50)
+                        } else {
+                            ForEach(conversations) { conversation in
+                                Button(action: {
+                                    path.append(conversation)
+                                }) {
+                                    ConversationRow(
+                                        title: conversation.messages.first?.text ?? "Nova Conversa",
+                                        preview: conversation.lastMessageText,
+                                        time: conversation.lastMessageDate.formattedString(),
+                                        unread: 0 // Unread count not implemented
+                                    )
+                                }
+                                .buttonStyle(.plain)
                             }
                         }
                     }
                     .padding(.horizontal, 16)
+                    .padding(.top, 16)
+
+                    Spacer(minLength: 24)
                 }
-
-                // Botão Nova conversa → abre ChatView
-                NewConversationButton {
-                    openChat = true
-                }
-                .padding(.horizontal, 16)
-
-                // Conversas recentes (filtradas pela busca)
-                VStack(alignment: .leading, spacing: 0) {
-                    let rows = filteredRecents()
-                    if rows.isEmpty {
-                        Text("Nenhuma conversa encontrada.")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                            .frame(maxWidth: .infinity, alignment: .center)
-                            .padding(.vertical, 24)
-                    } else {
-                        ForEach(Array(rows.enumerated()), id: \.offset) { _, c in
-                            HStack {
-                                Spacer(minLength: 0)
-
-                                // Row clicável → abre ChatView
-                                Button {
-                                    openChat = true
-                                } label: {
-                                    ConversationRow(
-                                        title: c.title,
-                                        preview: c.preview,
-                                        time: c.time,
-                                        unread: c.unread
-                                    )
-                                }
-                                .buttonStyle(.plain)
-
-                                Spacer(minLength: 0)
-                            }
-                            .padding(.vertical, 6)
-                        }
-                    }
-                }
-                .padding(.horizontal, 16)
-                .padding(.top, gapBeforeHistory)
-
-                Spacer(minLength: 24)
+                .padding(.bottom, 16)
             }
-            .padding(.bottom, 16)
+            .background(Color(.systemGroupedBackground))
+            .navigationTitle("Luci")
+            .navigationDestination(for: ConversationModel.self) { conversation in
+                LuciChatView(conversation: conversation)
+            }
+            .onAppear {
+                conversations = chatService.fetchConversations()
+            }
         }
-        // Link invisível que empurra para o Chat
-        .background(
-            NavigationLink(destination: ChatView(), isActive: $openChat) { EmptyView() }
-                .hidden()
-        )
-        .background(Color(.systemGroupedBackground))
-    }
-
-    // MARK: - Busca
-    private func filteredRecents() -> [(title: String, preview: String, time: String, unread: Int)] {
-        let q = normalize(query)
-        guard !q.isEmpty else { return recents }
-        return recents.filter { row in
-            let haystack = normalize(row.title + " " + row.preview)
-            return haystack.contains(q)
-        }
-    }
-
-    private func normalize(_ s: String) -> String {
-        s.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
-            .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private func hideKeyboard() {
@@ -308,6 +280,5 @@ struct LuciView: View {
 #Preview {
     NavigationStack { // para visualizar o push no Preview
         LuciView()
-            .navigationTitle("Luci")
     }
 }

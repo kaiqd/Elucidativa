@@ -28,30 +28,10 @@ private struct ChatBubble: View {
     }
 }
 
-// MARK: - Botão de ação
-private struct ChatActionButton: View {
-    var emoji: String
-    var title: String
-
-    var body: some View {
-        HStack(spacing: 10) {
-            Text(emoji)
-            Text(title)
-                .font(.system(size: 16, weight: .semibold))
-        }
-        .foregroundStyle(actionStroke)
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .frame(maxWidth: .infinity, minHeight: 44)
-        .background(
-            Capsule().stroke(actionStroke, lineWidth: 1.4)
-        )
-    }
-}
-
 // MARK: - Composer
 private struct ComposerBar: View {
     @Binding var text: String
+    var onSend: () -> Void
 
     var body: some View {
         HStack(spacing: 10) {
@@ -73,7 +53,7 @@ private struct ComposerBar: View {
                         .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 2)
                 )
 
-            Button(action: {}) {
+            Button(action: onSend) {
                 Circle()
                     .fill(Color("tabBarSelected"))
                     .frame(width: 40, height: 40)
@@ -82,6 +62,7 @@ private struct ComposerBar: View {
                                 .foregroundStyle(.white))
             }
             .buttonStyle(.plain)
+            .disabled(text.isEmpty)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
@@ -91,81 +72,54 @@ private struct ComposerBar: View {
 }
 
 // MARK: - ChatView
-struct ChatView: View {
+struct LuciChatView: View {
     @EnvironmentObject private var tabBar: TabBarVisibility
+    @StateObject private var viewModel: LuciViewModel
     @State private var compose: String = ""
-
-    private let luciIntro =
-    """
-    Como posso te ajudar hoje? Você pode me enviar um exame novo ou tirar dúvidas sobre seus resultados anteriores 😊
-    """
-
-    private let messages: [(text: String, isUser: Bool)] = [
-        ("Luci, o que significa hemoglobina baixa?", true),
-        (
-        """
-        Ótima pergunta! A hemoglobina é como um "táxi" que leva oxigênio pelo seu corpo. 🚕
-        Quando está baixa, você pode sentir:
-        • Cansaço constante
-        • Falta de ar
-        • Tontura
-
-        Isso pode indicar anemia. Importante conversar com seu médico sobre suplementação de ferro e alimentação rica em folhas verdes escuras! 🥬
-        """,
-        false
-        )
-    ]
-
-    private let cols = [GridItem(.flexible(minimum: 140), spacing: 12),
-                        GridItem(.flexible(minimum: 140), spacing: 12)]
+    
+    init(conversation: ConversationModel) {
+        _viewModel = StateObject(wrappedValue: LuciViewModel(conversation: conversation))
+    }
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 16) {
-                LuciHeader(avatar: nil)
-                    .padding(.bottom, 4)
-
-                // Intro da Luci (esquerda)
-                HStack {
-                    ChatBubble(text: luciIntro, isUser: false)
-                    Spacer(minLength: 0)
-                }
-                .padding(.leading, 16)
-
-                // Botões de ação
-                LazyVGrid(columns: cols, spacing: 12) {
-                    ChatActionButton(emoji: "📷", title: "Enviar exame")
-                    ChatActionButton(emoji: "❓", title: "Tirar dúvida")
-                    ChatActionButton(emoji: "📊", title: "Ver histórico")
-                    ChatActionButton(emoji: "💊", title: "Medicamentos")
-                }
-                .padding(.horizontal, 16)
-                .padding(.top, 4)
-
-                // Mensagens
+            ScrollViewReader { proxy in
                 VStack(spacing: 12) {
-                    ForEach(Array(messages.enumerated()), id: \.offset) { _, m in
-                        if m.isUser {
-                            ChatBubble(text: m.text, isUser: true)
+                    LuciHeader(avatar: nil)
+                        .padding(.bottom, 4)
+                    
+                    ForEach(viewModel.conversation.messages) { message in
+                        if message.isUser {
+                            ChatBubble(text: message.text, isUser: true)
                                 .frame(maxWidth: .infinity, alignment: .trailing)
-                                .padding(.trailing, -64)   
+                                .padding(.trailing, -64)
                         } else {
-                            ChatBubble(text: m.text, isUser: false)
+                            ChatBubble(text: message.text, isUser: false)
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.leading, 16)
                         }
                     }
                 }
-
-                Spacer(minLength: 24)
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
+                .onChange(of: viewModel.conversation.messages.count) {
+                    // Scroll to the bottom when a new message is added
+                    if let lastMessage = viewModel.conversation.messages.last {
+                        withAnimation {
+                            proxy.scrollTo(lastMessage.id, anchor: .bottom)
+                        }
+                    }
+                }
             }
-            .padding(.top, 8)
         }
         .background(appBackground)
-        // Composer fixo ao fundo
         .safeAreaInset(edge: .bottom) {
-            ComposerBar(text: $compose)
-                .ignoresSafeArea(.keyboard, edges: .bottom)
+            ComposerBar(text: $compose) {
+                if !compose.isEmpty {
+                    viewModel.sendMessage(compose)
+                    compose = ""
+                }
+            }
+            .ignoresSafeArea(.keyboard, edges: .bottom)
         }
         .onAppear { tabBar.isHidden = true }       // esconde tab bar no chat
         .onDisappear { tabBar.isHidden = false }   // volta tab bar ao sair
@@ -174,8 +128,12 @@ struct ChatView: View {
 }
 
 #Preview {
-    NavigationStack {
-        ChatView()
+    let mockConversation = ConversationModel(id: UUID(), startDate: Date(), lastMessageText: "Test", lastMessageDate: Date(), messages: [
+        ChatMessageModel(id: UUID(), text: "Hello", isUser: false, timestamp: Date())
+    ])
+    
+    return NavigationStack {
+        LuciChatView(conversation: mockConversation)
             .environmentObject(TabBarVisibility())
     }
 }

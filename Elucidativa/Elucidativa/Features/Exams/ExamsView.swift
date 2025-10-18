@@ -96,34 +96,11 @@ private struct FilterChip: View {
     }
 }
 
-// MARK: - Mock do domínio
-private enum ExamCategory { case sangue, urina, imagem, outro }
-private struct ExamItem: Identifiable {
-    let id = UUID()
-    let name: String
-    let date: Date
-    let place: String
-    let typeLabel: String
-    let formatLabel: String
-    let level: InterpretationLevel
-    let description: String
-    let category: ExamCategory
-}
-
 // MARK: - View
 struct ExamsView: View {
-    // Estado da busca/filtros
+    @EnvironmentObject var viewModel: HomeViewModel
     @State private var query: String = ""
     @State private var selectedFilter: FilterKind = .all
-
-    // Mock – troque pela VM depois
-    private let items: [ExamItem] = [
-        .init(name: "Hemograma Completo", date: .make(y: 2024, m: 11, d: 20), place: "Lab Sabin", typeLabel: "Sangue", formatLabel: "PDF", level: .normal, description: "Todos os valores estão dentro do esperado. Suas células do sangue estão funcionando bem!", category: .sangue),
-        .init(name: "Glicemia em Jejum",  date: .make(y: 2024, m: 11, d: 15), place: "Lab Fleury", typeLabel: "Sangue", formatLabel: "Foto", level: .attention, description: "Glicose um pouco elevada (115 mg/dL). Vale conversar com seu médico sobre alimentação.", category: .sangue),
-        .init(name: "Colesterol e Frações", date: .make(y: 2024, m: 10, d: 28), place: "Lab Delboni", typeLabel: "Sangue", formatLabel: "PDF", level: .normal, description: "LDL e HDL em níveis saudáveis.", category: .sangue),
-        .init(name: "TSH e T4 Livre", date: .make(y: 2024, m: 10, d: 15), place: "Lab Sabin", typeLabel: "Tireoide", formatLabel: "PDF", level: .normal, description: "Função tireoidiana dentro da faixa de referência.", category: .sangue),
-        .init(name: "Urina Tipo I", date: .make(y: 2024, m: 10, d: 10), place: "Lab Fleury", typeLabel: "Urina", formatLabel: "Foto", level: .critical, description: "Sinais de infecção. Procure avaliação médica.", category: .urina),
-    ]
 
     var body: some View {
         ScrollView {
@@ -160,7 +137,7 @@ struct ExamsView: View {
                         .padding(.top, 24)
                 } else {
                     ForEach(grouped.keys.sorted(by: >), id: \.self) { year in
-                        Text("\(year)")
+                        Text(verbatim: "\(year)")
                             .font(.headline)
                             .foregroundStyle(.secondary)
                             .padding(.horizontal, 16)
@@ -174,16 +151,16 @@ struct ExamsView: View {
                                 .padding(.top, 4)
 
                             VStack(spacing: 16) {
-                                ForEach(grouped[year]![month]!) { e in
+                                ForEach(grouped[year]![month]!) { exam in
                                     ExamCardView(
-                                        name: e.name,
+                                        name: exam.title,
                                         urgency: nil,
-                                        dateText: formattedDate(e.date),
-                                        place: e.place,
-                                        examType: e.typeLabel,
-                                        deliveryFormat: e.formatLabel,
-                                        level: e.level,
-                                        descriptionText: e.description
+                                        dateText: exam.date.formattedString(),
+                                        place: exam.lugar,
+                                        examType: exam.tipoDeExame,
+                                        deliveryFormat: exam.formaDeEntrega,
+                                        level: exam.nivel,
+                                        descriptionText: exam.description
                                     )
                                 }
                             }
@@ -203,9 +180,9 @@ struct ExamsView: View {
 
     // MARK: - Busca & agrupamento
 
-    private func filteredItems() -> [ExamItem] {
+    private func filteredItems() -> [ExamModel] {
         // filtro do chip
-        let byFilter: (ExamItem) -> Bool = { item in
+        let byFilter: (ExamModel) -> Bool = { item in
             switch selectedFilter {
             case .all:    return true
             case .sangue: return item.category == .sangue
@@ -216,18 +193,18 @@ struct ExamsView: View {
 
         // filtro por texto (case/acentos-insensitive)
         let q = normalize(query)
-        let byQuery: (ExamItem) -> Bool = { item in
+        let byQuery: (ExamModel) -> Bool = { item in
             guard !q.isEmpty else { return true }
-            let haystack = normalize([item.name, item.place, item.typeLabel, item.formatLabel, item.description].joined(separator: " "))
+            let haystack = normalize([item.title, item.lugar, item.tipoDeExame, item.formaDeEntrega, item.description].joined(separator: " "))
             return haystack.contains(q)
         }
 
-        return items.filter { byFilter($0) && byQuery($0) }
+        return viewModel.examsList.filter { byFilter($0) && byQuery($0) }
             .sorted(by: { $0.date > $1.date })
     }
 
-    private func groupedItems(_ items: [ExamItem]) -> [Int: [Int: [ExamItem]]] {
-        var dict: [Int: [Int: [ExamItem]]] = [:]
+    private func groupedItems(_ items: [ExamModel]) -> [Int: [Int: [ExamModel]]] {
+        var dict: [Int: [Int: [ExamModel]]] = [:]
         let cal = Calendar.current
         for it in items {
             let y = cal.component(.year, from: it.date)
@@ -243,11 +220,6 @@ struct ExamsView: View {
         return df.string(from: Calendar.current.date(from: comps)!).capitalized
     }
 
-    private func formattedDate(_ date: Date) -> String {
-        let df = DateFormatter(); df.locale = Locale(identifier: "pt_BR"); df.dateFormat = "dd/MM"
-        return df.string(from: date)
-    }
-
     private func normalize(_ s: String) -> String {
         s.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
             .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -260,15 +232,7 @@ struct ExamsView: View {
     }
 }
 
-// MARK: - Date helper
-private extension Date {
-    static func make(y: Int, m: Int, d: Int) -> Date {
-        var c = DateComponents()
-        c.year = y; c.month = m; c.day = d
-        return Calendar.current.date(from: c) ?? Date()
-    }
-}
-
 #Preview {
     ExamsView()
+        .environmentObject(HomeViewModel())
 }

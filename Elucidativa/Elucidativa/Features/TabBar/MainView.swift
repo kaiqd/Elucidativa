@@ -13,6 +13,7 @@ struct MainView: View {
     
     @StateObject private var tabBar = TabBarVisibility()
     @StateObject private var addFlow = AddExamFlow()   // ⬅️ fluxo do popup
+    @EnvironmentObject var viewModel: HomeViewModel
     
     var body: some View {
         ZStack {
@@ -25,6 +26,7 @@ struct MainView: View {
                 }
             }
             .environmentObject(tabBar)
+            .environmentObject(viewModel)
         }
         // Tab bar no inset
         .safeAreaInset(edge: .bottom) {
