@@ -50,7 +50,7 @@ private struct RoundIconButton: View {
     var body: some View {
         Button(action: action) {
             ZStack {
-                Circle().fill(Color("tabBarSelected"))
+                Circle().fill(Color.tabBarSelected)
                 Image(systemName: systemName)
                     .font(.system(size: 20, weight: .semibold))
                     .foregroundStyle(.white)
@@ -84,11 +84,11 @@ private struct FilterChip: View {
                 .padding(.vertical, 10)
                 .background(
                     Capsule(style: .continuous)
-                        .fill(isSelected ? Color("tabBarSelected") : .clear)
+                        .fill(isSelected ? Color.tabBarSelected : .clear)
                 )
                 .overlay(
                     Capsule(style: .continuous)
-                        .stroke(isSelected ? Color("tabBarSelected") : Color(.systemGray4), lineWidth: 1.2)
+                        .stroke(isSelected ? Color.tabBarSelected : Color(.systemGray4), lineWidth: 1.2)
                 )
                 .foregroundStyle(isSelected ? .white : .primary)
         }

@@ -10,9 +10,9 @@ private struct SearchField: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            Image(systemName: "magnifyingglass")
-                .font(.system(size: 18))
-                .foregroundStyle(.secondary)
+//            Image(systemName: "magnifyingglass")
+//                .font(.system(size: 18))
+//                .foregroundStyle(.secondary)
 
             TextField(placeholder, text: $text)
                 .textInputAutocapitalization(.never)
@@ -49,10 +49,10 @@ private struct FilterChip: View {
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
                 .background(
-                    Capsule().fill(isSelected ? Color("tabBarSelected") : .clear)
+                    Capsule().fill(isSelected ? Color.tabBarSelected : .clear)
                 )
                 .overlay(
-                    Capsule().stroke(isSelected ? Color("tabBarSelected") : Color(.systemGray4), lineWidth: 1.2)
+                    Capsule().stroke(isSelected ? Color.tabBarSelected : Color(.systemGray4), lineWidth: 1.2)
                 )
                 .foregroundStyle(isSelected ? .white : .primary)
         }
@@ -84,7 +84,7 @@ private struct NewConversationButton: View {
             .frame(width: 327, height: 56) // tamanho correto
             .background(
                 RoundedRectangle(cornerRadius: corner, style: .continuous)
-                    .fill(Color("tabBarSelected"))
+                    .fill(Color.tabBarSelected)
             )
             .shadow(color: .black.opacity(0.08), radius: 10, x: 0, y: 6)
             .contentShape(RoundedRectangle(cornerRadius: corner, style: .continuous))
@@ -116,7 +116,7 @@ private struct ConversationRow: View {
 
                 if unread > 0 {
                     ZStack {
-                        Circle().fill(Color("tabBarSelected"))
+                        Circle().fill(Color.tabBarSelected)
                         Text("\(unread)")
                             .font(.system(size: 14, weight: .bold))
                             .foregroundStyle(.white)
@@ -153,7 +153,7 @@ struct LuciHeader: View {
                 .scaledToFill()
                 .frame(width: 84, height: 84)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .foregroundStyle(Color("tabBarSelected"))
+                .foregroundStyle(Color.tabBarSelected)
 
             Text("Oi, eu sou a Luci!")
                 .font(.system(size: 23, weight: .bold))
@@ -194,7 +194,7 @@ struct LuciView: View {
                         SearchField(text: $query)
                         Button { hideKeyboard() } label: {
                             Circle()
-                                .fill(Color("tabBarSelected"))
+                                .fill(Color.tabBarSelected)
                                 .frame(width: 48, height: 48)
                                 .overlay(
                                     Image(systemName: "magnifyingglass")
@@ -259,7 +259,6 @@ struct LuciView: View {
                 .padding(.bottom, 16)
             }
             .background(Color(.systemGroupedBackground))
-            .navigationTitle("Luci")
             .navigationDestination(for: ConversationModel.self) { conversation in
                 LuciChatView(conversation: conversation)
             }

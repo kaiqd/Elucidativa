@@ -1,10 +1,3 @@
-//
-//  HomeViewModel.swift
-//  Elucidativa
-//
-//  Created by Vitor Costa on 09/02/25.
-//
-
 import SwiftUI
 import UIKit
 import Vision
@@ -31,7 +24,7 @@ class HomeViewModel: ObservableObject {
         self.examsList = persistenceService.fetchExams()
     }
     
-    func addExam(imageData: Data, formaDeEntrega: String) {
+    func addExam(imageData: Data, formaDeEntrega: String, completion: ((ExamModel) -> Void)? = nil) {
         guard let image = UIImage(data: imageData) else {
             print("Error: Could not create UIImage from data.")
             return
@@ -71,6 +64,9 @@ class HomeViewModel: ObservableObject {
                     
                     self.persistenceService.addExam(exam: newExam)
                     self.fetchData()
+                    
+                    // Call the completion handler with the new exam
+                    completion?(newExam)
                     
                 case .failure(let error):
                     print("Error sending to GPT: \(error.localizedDescription)")
@@ -137,7 +133,6 @@ class HomeViewModel: ObservableObject {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        // IMPORTANT: Replace with your actual OpenAI API key.
         request.setValue("Bearer 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", forHTTPHeaderField: "Authorization")
         
         let systemMessage = "Você é um sistema especializado em explicar termos médicos e científicos de forma acessível a pessoas leigas. Sua missão é receber um laudo de exame médico e fornecer uma explicação concisa sobre os achados descritos para o paciente, utilizando uma linguagem simples e compreensível para um estudante do ensino fundamental."
@@ -196,10 +191,6 @@ class HomeViewModel: ObservableObject {
                 completion(.failure(noDataError))
                 return
             }
-            
-            print("--- Raw GPT Response ---")
-            print(String(data: data, encoding: .utf8) ?? "Could not print data")
-            print("------------------------")
             
             do {
                 let openAIResponse = try JSONDecoder().decode(OpenAIResponse.self, from: data)

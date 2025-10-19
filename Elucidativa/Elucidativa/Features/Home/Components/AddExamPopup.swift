@@ -51,7 +51,6 @@ struct AddExamPopup: View {
                     .shadow(color: .black.opacity(0.15), radius: 24, x: 0, y: 12)
             )
         }
-        .transition(.scale.combined(with: .opacity))
     }
 }
 
@@ -67,7 +66,7 @@ private struct Tile: View {
             VStack(spacing: 10) {
                 Image(systemName: icon)
                     .font(.system(size: 30, weight: .semibold))
-                    .foregroundStyle(Color("tabBarSelected"))
+                    .foregroundStyle(Color.tabBarSelected)
                 VStack(spacing: 0) {
                     Text(titleTop)
                     Text(titleBottom)

@@ -32,6 +32,13 @@ class LuciViewModel: ObservableObject {
         }
     }
     
+
+    func addLuciMessage(_ text: String) {
+        chatService.addMessage(to: conversation.id, text: text, isUser: false)
+        let luciMessage = ChatMessageModel(id: UUID(), text: text, isUser: false, timestamp: Date())
+        conversation.messages.append(luciMessage)
+    }
+
     func sendMessage(_ text: String) {
         chatService.addMessage(to: conversation.id, text: text, isUser: true)
         let userMessage = ChatMessageModel(id: UUID(), text: text, isUser: true, timestamp: Date())

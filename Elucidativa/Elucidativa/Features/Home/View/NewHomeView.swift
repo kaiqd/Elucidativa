@@ -1,10 +1,3 @@
-//
-//  NewHomeView.swift
-//  Elucidativa
-//
-//  Created by Kaique Diniz on 18/10/25.
-//
-
 import SwiftUI
 
 // Header simples reutilizável
@@ -30,9 +23,17 @@ private struct SectionHeader: View {
 }
 
 struct NewHomeView: View {
+    @Binding var selectedTab: AppTab
     @EnvironmentObject var viewModel: HomeViewModel
+    @EnvironmentObject var userSettings: UserSettings
+    
     @State private var showAddPopup = false
     @StateObject private var addFlow = AddExamFlow()
+    
+    // For disclaimer alert
+    @State private var showDisclaimerAlert = false
+    @State private var pendingImageData: Data?
+    @State private var pendingFileFormat: String?
 
     var body: some View {
         ZStack {
@@ -43,9 +44,9 @@ struct NewHomeView: View {
                         .padding(.top, 8)
 
                     SectionHeader(title: "Exames recentes", trailingTitle: "Ver todos") {
-                        // TODO: Navigate to ExamsView
+                        selectedTab = .exams
                     }
-                        .padding(.top, 4)
+                    .padding(.top, 4)
 
                     VStack(spacing: 20) {
                         if viewModel.examsList.isEmpty {
@@ -108,52 +109,56 @@ struct NewHomeView: View {
                 )
             }
         }
-        .sheet(isPresented: $addFlow.showCamera) {
-            CameraPicker(image: $addFlow.capturedImage)
-                .ignoresSafeArea()
-        }
-        .sheet(isPresented: $addFlow.showPhotoLibrary) {
-            PhotoLibraryPicker(image: $addFlow.pickedImage)
-        }
-        .sheet(isPresented: $addFlow.showDocumentPicker) {
-            DocumentPicker(url: $addFlow.pickedFileURL)
-        }
+        .sheet(isPresented: $addFlow.showCamera) { CameraPicker(image: $addFlow.capturedImage).ignoresSafeArea() }
+        .sheet(isPresented: $addFlow.showPhotoLibrary) { PhotoLibraryPicker(image: $addFlow.pickedImage) }
+        .sheet(isPresented: $addFlow.showDocumentPicker) { DocumentPicker(url: $addFlow.pickedFileURL) }
         .alert(item: $addFlow.alert) { item in
             Alert(title: Text(item.title), message: Text(item.message), dismissButton: .default(Text("OK")))
         }
-        .onChange(of: addFlow.capturedImage) { image in
-            guard let img = image, let data = img.jpegData(compressionQuality: 0.8) else { return }
-            viewModel.addExam(imageData: data, formaDeEntrega: "imagem")
-            addFlow.capturedImage = nil
-        }
-        .onChange(of: addFlow.pickedImage) { image in
-            guard let img = image, let data = img.jpegData(compressionQuality: 0.8) else { return }
-            viewModel.addExam(imageData: data, formaDeEntrega: "imagem")
-            addFlow.pickedImage = nil
-        }
-        .onChange(of: addFlow.pickedFileURL) { fileURL in
-            guard let url = fileURL else { return }
-            
-            let isAccessing = url.startAccessingSecurityScopedResource()
-            defer {
-                if isAccessing {
-                    url.stopAccessingSecurityScopedResource()
-                }
+        .onChange(of: addFlow.capturedImage) { handleImage($0) }
+        .onChange(of: addFlow.pickedImage) { handleImage($0) }
+        .onChange(of: addFlow.pickedFileURL) { handleFile($0) }
+        .disclaimerAlert(isPresented: $showDisclaimerAlert) {
+            if let data = pendingImageData, let format = pendingFileFormat {
+                viewModel.addExam(imageData: data, formaDeEntrega: format)
             }
-            
-            if url.pathExtension.lowercased() == "pdf" {
-                print("PDF processing not implemented yet.")
-            } else { // Assume it's an image
-                if let imageData = try? Data(contentsOf: url) {
-                    viewModel.addExam(imageData: imageData, formaDeEntrega: "imagem")
-                }
-            }
-            addFlow.pickedFileURL = nil
+            pendingImageData = nil
+            pendingFileFormat = nil
         }
+    }
+    
+    private func handleImage(_ image: UIImage?) {
+        guard let img = image, let data = img.jpegData(compressionQuality: 0.8) else { return }
+        triggerDisclaimer(imageData: data, format: "imagem")
+        addFlow.capturedImage = nil
+        addFlow.pickedImage = nil
+    }
+    
+    private func handleFile(_ fileURL: URL?) {
+        guard let url = fileURL else { return }
+        
+        let isAccessing = url.startAccessingSecurityScopedResource()
+        defer { if isAccessing { url.stopAccessingSecurityScopedResource() } }
+        
+        if url.pathExtension.lowercased() == "pdf" {
+            print("PDF processing not implemented yet.")
+        } else {
+            if let imageData = try? Data(contentsOf: url) {
+                triggerDisclaimer(imageData: imageData, format: "imagem")
+            }
+        }
+        addFlow.pickedFileURL = nil
+    }
+    
+    private func triggerDisclaimer(imageData: Data, format: String) {
+        pendingImageData = imageData
+        pendingFileFormat = format
+        showDisclaimerAlert = true
     }
 }
 
 #Preview {
-    NewHomeView()
+    NewHomeView(selectedTab: .constant(.home))
         .environmentObject(HomeViewModel())
+        .environmentObject(UserSettings())
 }

@@ -7,9 +7,6 @@
     "•" : {
 
     },
-    "Ação do +" : {
-
-    },
     "AddReport" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -50,6 +47,9 @@
     "Back" : {
       "extractionState" : "manual"
     },
+    "Bem-vindo(a) ao Elucidativa!" : {
+
+    },
     "Buscar exames..." : {
 
     },
@@ -63,6 +63,12 @@
           }
         }
       }
+    },
+    "Como podemos te chamar?" : {
+
+    },
+    "Continuar" : {
+
     },
     "DeleteReport" : {
       "extractionState" : "manual",
@@ -84,19 +90,22 @@
     "Digite sua dúvida..." : {
 
     },
+    "Dúvidas Frequentes" : {
+
+    },
+    "Entendi" : {
+
+    },
     "Enviar novo exame" : {
+
+    },
+    "Este aplicativo não é um médico e não fornece diagnósticos. As análises são geradas por inteligência artificial e podem conter erros. Sempre consulte um profissional de saúde qualificado para interpretar seus exames." : {
 
     },
     "Estou aqui para te ajudar a entender seus exames de forma simples e clara." : {
 
     },
-    "Exames" : {
-
-    },
-    "Início" : {
-
-    },
-    "Luci" : {
+    "Isenção de Responsabilidade" : {
 
     },
     "Nenhum exame encontrado." : {
@@ -152,9 +161,6 @@
 
     },
     "OK" : {
-
-    },
-    "Perfil" : {
 
     },
     "Reports" : {
@@ -225,10 +231,10 @@
         }
       }
     },
-    "Tire uma foto ou envie o PDF" : {
+    "Tire fotos ou envie PDFs dos seus laudos de exames e receba uma explicação em linguagem simples e acessível." : {
 
     },
-    "Y Offset: %lld" : {
+    "Tire uma foto ou envie o PDF" : {
 
     }
   },

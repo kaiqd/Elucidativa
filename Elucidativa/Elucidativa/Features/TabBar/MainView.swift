@@ -14,12 +14,13 @@ struct MainView: View {
     @StateObject private var tabBar = TabBarVisibility()
     @StateObject private var addFlow = AddExamFlow()   // ⬅️ fluxo do popup
     @EnvironmentObject var viewModel: HomeViewModel
+    @EnvironmentObject var userSettings: UserSettings
     
     var body: some View {
         ZStack {
             Group {
                 switch selectedTab {
-                case .home:   NavigationStack(path: $homePath) { NewHomeView() }
+                case .home:   NavigationStack(path: $homePath) { NewHomeView(selectedTab: $selectedTab) }
                 case .exams:  NavigationStack(path: $examsPath) { ExamsView() }
                 case .luci:   NavigationStack(path: $luciPath) { LuciView() }
                 case .profile:NavigationStack(path: $profilePath) { ProfileView() }
@@ -27,6 +28,7 @@ struct MainView: View {
             }
             .environmentObject(tabBar)
             .environmentObject(viewModel)
+            .environmentObject(userSettings)
         }
         // Tab bar no inset
         .safeAreaInset(edge: .bottom) {
@@ -34,12 +36,12 @@ struct MainView: View {
                 CustomTabBar(
                     selected: $selectedTab,
                     icons: [
-                        .home:    (name: "home",   title: "Início"),
-                        .exams:   (name: "exames", title: "Exames"),
-                        .luci:    (name: "luci",   title: "Luci"),
-                        .profile: (name: "perfill", title: "Perfil")
+                        .home:    TabSpec(icon: .asset("home"),    title: "Início"),
+                        .exams:   TabSpec(icon: .asset("exames"),  title: "Exames"),
+                        .luci:    TabSpec(icon: .asset("luci"),    title: "Luci"),
+                        .profile: TabSpec(icon: .sfSymbol("questionmark.circle"), title: "FAQ") // ⬅️ SF Symbol aqui
                     ],
-                    onCenterTap: { showAddPopup = true  }
+                    onCenterTap: { showAddPopup = true }
                 )
                 .ignoresSafeArea(.keyboard, edges: .bottom)
             }
@@ -90,4 +92,5 @@ struct MainView: View {
 #Preview {
     MainView()
         .environmentObject(HomeViewModel())
+        .environmentObject(UserSettings())
 }

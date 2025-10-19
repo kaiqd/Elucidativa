@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct AddExamCard: View {
-    var name: String = "Maria Silva"
+    @EnvironmentObject var userSettings: UserSettings
     var onTap: (() -> Void)? = nil
 
     private let height: CGFloat = 254
@@ -18,7 +18,7 @@ struct AddExamCard: View {
                     .font(.system(size: 13.8))
                     .foregroundStyle(.secondary)
 
-                Text(name)
+                Text(userSettings.name)
                     .font(.system(size: 22.7, weight: .bold))
 
                 Spacer(minLength: 16)
