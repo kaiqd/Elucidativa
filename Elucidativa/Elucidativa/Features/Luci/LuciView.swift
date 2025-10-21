@@ -144,11 +144,11 @@ private struct ConversationRow: View {
 
 // MARK: - Header com avatar 84x84
 struct LuciHeader: View {
-    var avatar: Image? = nil
+    var avatar: Image
 
     var body: some View {
         VStack(spacing: 14) {
-            (avatar ?? Image(systemName: "person.crop.circle.fill"))
+            avatar
                 .resizable()
                 .scaledToFill()
                 .frame(width: 84, height: 84)
@@ -187,7 +187,7 @@ struct LuciView: View {
                 VStack(spacing: 20) {
 
                     // Header
-                    LuciHeader(avatar: nil)
+                    LuciHeader(avatar: Image("avatar"))
 
                     // Busca
                     HStack(spacing: 12) {

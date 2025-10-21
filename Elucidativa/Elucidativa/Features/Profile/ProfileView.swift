@@ -23,14 +23,25 @@ struct ProfileView: View {
     
     var body: some View {
         NavigationStack {
-            List(faqItems) { item in
-                DisclosureGroup(item.question) {
-                    Text(item.answer)
-                        .font(.body)
-                        .foregroundStyle(.secondary)
-                        .padding(.top, 8)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    ForEach(faqItems) { item in
+                        DisclosureGroup(
+                            content: {
+                                Text(item.answer)
+                                    .font(.body)
+                                    .foregroundStyle(.secondary)
+                                    .padding(.top, 8)
+                            },
+                            label: {
+                                Text(item.question)
+                                    .font(.headline)
+                                    .foregroundStyle(Color.tabBarSelected)
+                            }
+                        )
+                    }
                 }
-                .font(.headline)
+                .padding()
             }
             .navigationTitle("Dúvidas Frequentes")
         }

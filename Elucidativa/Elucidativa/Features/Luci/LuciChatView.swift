@@ -105,7 +105,7 @@ struct LuciChatView: View {
                 ScrollView {
                     ScrollViewReader { proxy in
                         VStack(spacing: 12) {
-                            LuciHeader(avatar: nil)
+                            LuciHeader(avatar: Image(.avatar))
                                 .padding(.bottom, 4)
                             
                             ForEach(luciViewModel.conversation.messages) { message in
