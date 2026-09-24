@@ -1,7 +1,10 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "" : {
+    "%lld" : {
+
+    },
+    "•" : {
 
     },
     "AddReport" : {
@@ -20,6 +23,9 @@
           }
         }
       }
+    },
+    "Adicionar Exame" : {
+
     },
     "AppExplanation" : {
       "extractionState" : "manual",
@@ -41,6 +47,12 @@
     "Back" : {
       "extractionState" : "manual"
     },
+    "Bem-vindo(a) ao Elucidativa!" : {
+
+    },
+    "Buscar exames..." : {
+
+    },
     "Cancel" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -51,6 +63,12 @@
           }
         }
       }
+    },
+    "Como podemos te chamar?" : {
+
+    },
+    "Continuar" : {
+
     },
     "DeleteReport" : {
       "extractionState" : "manual",
@@ -69,7 +87,34 @@
         }
       }
     },
-    "Elucidativa" : {
+    "Digite sua dúvida..." : {
+
+    },
+    "Dúvidas Frequentes" : {
+
+    },
+    "Entendi" : {
+
+    },
+    "Enviar novo exame" : {
+
+    },
+    "Este aplicativo não é um médico e não fornece diagnósticos. As análises são geradas por inteligência artificial e podem conter erros. Sempre consulte um profissional de saúde qualificado para interpretar seus exames." : {
+
+    },
+    "Estou aqui para te ajudar a entender seus exames de forma simples e clara." : {
+
+    },
+    "Isenção de Responsabilidade" : {
+
+    },
+    "Nenhum exame encontrado." : {
+
+    },
+    "Nenhum exame recente." : {
+
+    },
+    "Nenhuma conversa anterior." : {
 
     },
     "Nenhuma rede detectada. Conecte-se ao Wi-Fi ou à rede móvel e tente novamente." : {
@@ -109,6 +154,12 @@
         }
       }
     },
+    "Nova Conversa" : {
+
+    },
+    "Oi, eu sou a Luci!" : {
+
+    },
     "OK" : {
 
     },
@@ -128,6 +179,9 @@
           }
         }
       }
+    },
+    "Seja bem vindo(a)," : {
+
     },
     "SelectPhoto" : {
       "extractionState" : "manual",
@@ -176,6 +230,12 @@
           }
         }
       }
+    },
+    "Tire fotos ou envie PDFs dos seus laudos de exames e receba uma explicação em linguagem simples e acessível." : {
+
+    },
+    "Tire uma foto ou envie o PDF" : {
+
     }
   },
   "version" : "1.0"

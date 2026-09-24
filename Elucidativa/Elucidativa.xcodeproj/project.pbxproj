@@ -390,10 +390,11 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_ASSET_PATHS = "\"Elucidativa/Preview Content\"";
-				DEVELOPMENT_TEAM = ZAKSG2QLGT;
+				DEVELOPMENT_TEAM = B8UQXR25SK;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Elucidativa;
+				INFOPLIST_KEY_NSCameraUsageDescription = "\"Precisamos do acesso a camera para que possa enviar seu exame\"";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -426,10 +427,11 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_ASSET_PATHS = "\"Elucidativa/Preview Content\"";
-				DEVELOPMENT_TEAM = ZAKSG2QLGT;
+				DEVELOPMENT_TEAM = B8UQXR25SK;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Elucidativa;
+				INFOPLIST_KEY_NSCameraUsageDescription = "\"Precisamos do acesso a camera para que possa enviar seu exame\"";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
