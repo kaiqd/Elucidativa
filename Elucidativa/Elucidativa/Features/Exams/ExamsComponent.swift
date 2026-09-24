@@ -41,6 +41,7 @@ struct StatusPill: View {
 }
 
 struct ExamCardView: View {
+    @State private var showVLibras = false
     let name: String
     let urgency: String?
     let dateText: String
@@ -107,6 +108,19 @@ struct ExamCardView: View {
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                         .padding(.top, 2)
+
+                    if !descriptionText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        Button {
+                            showVLibras = true
+                        } label: {
+                            Label("Ver em Libras", systemImage: "hands.sparkles")
+                                .font(.subheadline.weight(.semibold))
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(Color.tabBarSelected)
+                        .accessibilityHint("Abre a explicação deste exame no VLibras")
+                        .padding(.top, 4)
+                    }
                 }
                 .padding(contentPadding)
             }
@@ -114,6 +128,9 @@ struct ExamCardView: View {
         }
         .frame(maxWidth: .infinity)   // ⬅️ ocupa toda a largura disponível
         .frame(minHeight: minHeight)
+        .sheet(isPresented: $showVLibras) {
+            VLibrasView(text: descriptionText)
+        }
     }
 }
 

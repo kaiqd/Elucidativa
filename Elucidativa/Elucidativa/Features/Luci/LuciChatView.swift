@@ -7,6 +7,7 @@ private let luciBubble    = Color(.secondarySystemBackground)
 
 // MARK: - Balão
 private struct ChatBubble: View {
+    @State private var showVLibras = false
     var message: ChatMessageModel
 
     private let corner: CGFloat = 18
@@ -20,17 +21,33 @@ private struct ChatBubble: View {
                 .frame(maxWidth: maxBubbleWidth)
                 .clipShape(RoundedRectangle(cornerRadius: corner, style: .continuous))
         } else {
-            Text(message.text)
-                .font(.system(size: 15))
-                .foregroundStyle(.primary)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 12)
-                .background(
-                    RoundedRectangle(cornerRadius: corner, style: .continuous)
-                        .fill(message.isUser ? userBubble : luciBubble)
-                        .shadow(color: message.isUser ? .clear : .black.opacity(0.06), radius: 8, x: 0, y: 4)
-                )
-                .frame(maxWidth: maxBubbleWidth, alignment: .leading)
+            VStack(alignment: .leading, spacing: 10) {
+                Text(message.text)
+                    .font(.system(size: 15))
+                    .foregroundStyle(.primary)
+
+                if !message.isUser && !message.text.isEmpty {
+                    Button {
+                        showVLibras = true
+                    } label: {
+                        Label("Ver em Libras", systemImage: "hands.sparkles")
+                            .font(.caption.weight(.semibold))
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(Color.tabBarSelected)
+                }
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: corner, style: .continuous)
+                    .fill(message.isUser ? userBubble : luciBubble)
+                    .shadow(color: message.isUser ? .clear : .black.opacity(0.06), radius: 8, x: 0, y: 4)
+            )
+            .frame(maxWidth: maxBubbleWidth, alignment: .leading)
+            .sheet(isPresented: $showVLibras) {
+                VLibrasView(text: message.text)
+            }
         }
     }
 }

@@ -10,6 +10,7 @@ import SwiftUI
 struct ExamResult: View {
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var viewModel: HomeViewModel
+    @State private var showVLibras = false
     let exam: ExamModel
     
     var body: some View {
@@ -45,6 +46,19 @@ struct ExamResult: View {
                             .padding(.top, 24)
                             .padding(.bottom, 16)
                     }
+
+                    Button {
+                        showVLibras = true
+                    } label: {
+                        Label("Ver em Libras", systemImage: "hands.sparkles")
+                            .font(.system(size: 16, weight: .semibold))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.mainStrongGreen)
+                    .accessibilityHint("Abre a tradução da explicação do laudo com o VLibras")
+                    .padding(.bottom, 12)
                     
                     Button {
                         viewModel.deleteExam(id: exam.id)
@@ -85,6 +99,9 @@ struct ExamResult: View {
                     .font(.system(size: 16, weight: .bold))
                     .foregroundStyle(.mainStrongGreen)
             }
+        }
+        .sheet(isPresented: $showVLibras) {
+            VLibrasView(text: exam.description)
         }
     }
 }
