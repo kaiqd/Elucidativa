@@ -98,6 +98,7 @@ private struct FilterChip: View {
 
 // MARK: - View
 struct ExamsView: View {
+    var onShowHelp: () -> Void
     @EnvironmentObject var viewModel: HomeViewModel
     @State private var query: String = ""
     @State private var selectedFilter: FilterKind = .all
@@ -176,6 +177,16 @@ struct ExamsView: View {
             .padding(.bottom, 16)
         }
         .background(Color(.systemGroupedBackground))
+        .navigationTitle("Exames")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(action: onShowHelp) {
+                    Image(systemName: "questionmark.circle")
+                }
+                .accessibilityLabel("Dúvidas frequentes")
+            }
+        }
     }
 
     // MARK: - Busca & agrupamento
@@ -233,6 +244,6 @@ struct ExamsView: View {
 }
 
 #Preview {
-    ExamsView()
+    ExamsView(onShowHelp: {})
         .environmentObject(HomeViewModel())
 }

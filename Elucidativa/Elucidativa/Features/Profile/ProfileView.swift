@@ -14,7 +14,7 @@ struct ProfileView: View {
         FAQItem(question: "Este aplicativo substitui um médico?",
                 answer: "Não. Este aplicativo é uma ferramenta de auxílio e não substitui, em nenhuma hipótese, a consulta, o diagnóstico e o acompanhamento de um profissional de saúde qualificado. Use as informações aqui presentes para ter uma conversa mais informada com seu médico."),
         FAQItem(question: "Meus dados e laudos estão seguros?",
-                answer: "Sim. Seus exames são processados de forma anônima e não são armazenados em nossos servidores após a análise. O histórico de suas conversas e exames fica salvo apenas no seu dispositivo."),
+                answer: "Sim. Seus exames são processados de forma anônima e não são armazenados em nossos servidores após a análise. O histórico dos exames fica salvo apenas no seu dispositivo."),
         FAQItem(question: "Quais tipos de exames posso enviar?",
                 answer: "Você pode enviar a maioria dos laudos de exames que contenham texto, como exames de sangue, urina, imagem (com laudo), etc. A qualidade da análise depende da clareza e legibilidade do texto no documento."),
         FAQItem(question: "A análise da IA é 100% precisa?",
@@ -22,32 +22,31 @@ struct ProfileView: View {
     ]
     
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    ForEach(faqItems) { item in
-                        DisclosureGroup(
-                            content: {
-                                Text(item.answer)
-                                    .font(.body)
-                                    .foregroundStyle(.secondary)
-                                    .padding(.top, 8)
-                            },
-                            label: {
-                                Text(item.question)
-                                    .font(.headline)
-                                    .foregroundStyle(Color.tabBarSelected)
-                            }
-                        )
-                    }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                ForEach(faqItems) { item in
+                    DisclosureGroup(
+                        content: {
+                            Text(item.answer)
+                                .font(.body)
+                                .foregroundStyle(.secondary)
+                                .padding(.top, 8)
+                        },
+                        label: {
+                            Text(item.question)
+                                .font(.headline)
+                                .foregroundStyle(Color.tabBarSelected)
+                        }
+                    )
                 }
-                .padding()
             }
-            .navigationTitle("Dúvidas Frequentes")
+            .padding()
         }
+        .navigationTitle("Dúvidas frequentes")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
 #Preview {
-    ProfileView()
+    NavigationStack { ProfileView() }
 }

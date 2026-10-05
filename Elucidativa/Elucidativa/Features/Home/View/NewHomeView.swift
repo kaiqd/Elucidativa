@@ -1,164 +1,124 @@
 import SwiftUI
 
-// Header simples reutilizável
-private struct SectionHeader: View {
-    var title: String
-    var trailingTitle: String?
-    var onTapTrailing: (() -> Void)?
-
-    var body: some View {
-        HStack(alignment: .firstTextBaseline) {
-            Text(title)
-                .font(.title3.weight(.bold))
-                .foregroundStyle(.primary)
-            Spacer()
-            if let trailingTitle {
-                Button(trailingTitle) { onTapTrailing?() }
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Color.blue)
-            }
-        }
-        .padding(.horizontal, 16)
-    }
-}
-
 struct NewHomeView: View {
     @Binding var selectedTab: AppTab
-    @EnvironmentObject var viewModel: HomeViewModel
-    @EnvironmentObject var userSettings: UserSettings
-    
-    @State private var showAddPopup = false
-    @StateObject private var addFlow = AddExamFlow()
-    
-    // For disclaimer alert
-    @State private var showDisclaimerAlert = false
-    @State private var pendingImageData: Data?
-    @State private var pendingFileFormat: String?
+    var onAddExam: () -> Void
+    var onShowHelp: () -> Void
+
+    @EnvironmentObject private var viewModel: HomeViewModel
+    @EnvironmentObject private var userSettings: UserSettings
+
+    private let accent = Color.tabBarSelected
 
     var body: some View {
-        ZStack {
-            ScrollView {
-                VStack(spacing: 24) {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 28) {
+                header
 
-                    AddExamCard(onTap: { showAddPopup = true  })
-                        .padding(.top, 8)
-
-                    SectionHeader(title: "Exames recentes", trailingTitle: "Ver todos") {
-                        selectedTab = .exams
-                    }
-                    .padding(.top, 4)
-
-                    VStack(spacing: 20) {
-                        if viewModel.examsList.isEmpty {
-                            Text("Nenhum exame recente.")
-                                .foregroundStyle(.secondary)
-                                .padding()
-                        } else {
-                            ForEach(viewModel.examsList) { exam in
-                                ExamCardView(
-                                    name: exam.title,
-                                    urgency: nil,
-                                    dateText: exam.date.formattedString(),
-                                    place: exam.lugar,
-                                    examType: exam.tipoDeExame,
-                                    deliveryFormat: exam.formaDeEntrega,
-                                    level: exam.nivel,
-                                    descriptionText: exam.description
-                                )
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 16)
-
-                    SectionHeader(title: "Dicas de saúde")
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 16) {
-                            HealthTipCard(emoji: "💧", title: "Hidratação", tip: "Beba 2L de água por dia")
-                            HealthTipCard(emoji: "🏃‍♂️", title: "Exercícios", tip: "30min por dia fazem diferença")
-                            HealthTipCard(emoji: "🛌", title: "Sono", tip: "Busque 7–8h por noite")
-                        }
-                        .padding(.horizontal, 16)
-                    }
-
-                    Spacer(minLength: 24)
+                if viewModel.examsList.isEmpty {
+                    emptyState
+                } else {
+                    recentExams
                 }
-                .padding(.bottom, 16)
             }
-            .background(Color(.systemGroupedBackground))
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 20)
+            .padding(.top, 24)
+            .padding(.bottom, 32)
+        }
+        .background(Color.background.ignoresSafeArea())
+        .toolbar(.hidden, for: .navigationBar)
+    }
 
-            if showAddPopup {
-                AddExamPopup(
-                    onClose: { showAddPopup = false },
-                    onTakePhoto: {
-                         showAddPopup = false
-                        if UIImagePickerController.isSourceTypeAvailable(.camera) {
-                            addFlow.showCamera = true
-                        } else {
-                            addFlow.alert = .init(title: "Câmera indisponível",
-                                                  message: "Use um dispositivo com câmera ou tente a galeria.")
-                        }
-                    },
-                    onSendFile: {
-                         showAddPopup = false
-                        addFlow.showDocumentPicker = true
-                    },
-                    onOpenGallery: {
-                        showAddPopup = false
-                        addFlow.showPhotoLibrary = true
-                    }
+    private var header: some View {
+        HStack(alignment: .top, spacing: 16) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Olá, \(userSettings.name)")
+                    .font(.largeTitle.bold())
+                    .foregroundStyle(.primary)
+
+                Text("Seus exames em um só lugar.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer(minLength: 0)
+
+            Button(action: onShowHelp) {
+                Image(systemName: "questionmark.circle")
+                    .font(.system(size: 23))
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(accent)
+            .accessibilityLabel("Dúvidas frequentes")
+        }
+    }
+
+    private var emptyState: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Image(systemName: "doc.text")
+                .font(.title2)
+                .foregroundStyle(accent)
+                .frame(width: 48, height: 48)
+                .background(accent.opacity(0.1), in: RoundedRectangle(cornerRadius: 12))
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Nenhum exame adicionado")
+                    .font(.title3.bold())
+
+                Text("Envie uma foto do laudo para receber uma explicação em linguagem simples.")
+                    .font(.body)
+                    .foregroundStyle(.secondary)
+            }
+
+            Button(action: onAddExam) {
+                Text("Adicionar exame")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.white)
+            .background(accent, in: RoundedRectangle(cornerRadius: 12))
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 20))
+    }
+
+    private var recentExams: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack {
+                Text("Exames recentes")
+                    .font(.title3.bold())
+
+                Spacer()
+
+                Button("Ver todos") { selectedTab = .exams }
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(accent)
+            }
+
+            ForEach(viewModel.examsList.sorted(by: { $0.date > $1.date }).prefix(3)) { exam in
+                ExamCardView(
+                    name: exam.title,
+                    urgency: nil,
+                    dateText: exam.date.formattedString(),
+                    place: exam.lugar,
+                    examType: exam.tipoDeExame,
+                    deliveryFormat: exam.formaDeEntrega,
+                    level: exam.nivel,
+                    descriptionText: exam.description
                 )
             }
         }
-        .sheet(isPresented: $addFlow.showCamera) { CameraPicker(image: $addFlow.capturedImage).ignoresSafeArea() }
-        .sheet(isPresented: $addFlow.showPhotoLibrary) { PhotoLibraryPicker(image: $addFlow.pickedImage) }
-        .sheet(isPresented: $addFlow.showDocumentPicker) { DocumentPicker(url: $addFlow.pickedFileURL) }
-        .alert(item: $addFlow.alert) { item in
-            Alert(title: Text(item.title), message: Text(item.message), dismissButton: .default(Text("OK")))
-        }
-        .onChange(of: addFlow.capturedImage) { handleImage($0) }
-        .onChange(of: addFlow.pickedImage) { handleImage($0) }
-        .onChange(of: addFlow.pickedFileURL) { handleFile($0) }
-        .disclaimerAlert(isPresented: $showDisclaimerAlert) {
-            if let data = pendingImageData, let format = pendingFileFormat {
-                viewModel.addExam(imageData: data, formaDeEntrega: format)
-            }
-            pendingImageData = nil
-            pendingFileFormat = nil
-        }
-    }
-    
-    private func handleImage(_ image: UIImage?) {
-        guard let img = image, let data = img.jpegData(compressionQuality: 0.8) else { return }
-        triggerDisclaimer(imageData: data, format: "imagem")
-        addFlow.capturedImage = nil
-        addFlow.pickedImage = nil
-    }
-    
-    private func handleFile(_ fileURL: URL?) {
-        guard let url = fileURL else { return }
-        
-        let isAccessing = url.startAccessingSecurityScopedResource()
-        defer { if isAccessing { url.stopAccessingSecurityScopedResource() } }
-        
-        if url.pathExtension.lowercased() == "pdf" {
-            print("PDF processing not implemented yet.")
-        } else {
-            if let imageData = try? Data(contentsOf: url) {
-                triggerDisclaimer(imageData: imageData, format: "imagem")
-            }
-        }
-        addFlow.pickedFileURL = nil
-    }
-    
-    private func triggerDisclaimer(imageData: Data, format: String) {
-        pendingImageData = imageData
-        pendingFileFormat = format
-        showDisclaimerAlert = true
     }
 }
 
 #Preview {
-    NewHomeView(selectedTab: .constant(.home))
+    NewHomeView(selectedTab: .constant(.home), onAddExam: {}, onShowHelp: {})
         .environmentObject(HomeViewModel())
         .environmentObject(UserSettings())
 }
