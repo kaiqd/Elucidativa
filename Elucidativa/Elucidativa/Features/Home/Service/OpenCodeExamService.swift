@@ -17,7 +17,7 @@ final class OpenCodeExamService {
     func analyze(
         systemMessage: String,
         userPrompt: String,
-        completion: @escaping (Result<GPTExamResponse, Error>) -> Void
+        completion: @escaping (Result<ExamAnalysisResponse, Error>) -> Void
     ) {
         guard isConfigured else {
             completion(.failure(ServiceError.missingKey))
@@ -31,19 +31,6 @@ final class OpenCodeExamService {
         request.setValue("Elucidativa/1.0", forHTTPHeaderField: "User-Agent")
         request.setValue(UUID().uuidString, forHTTPHeaderField: "x-opencode-session")
 
-        let examSchema: [String: Any] = [
-            "type": "object",
-            "properties": [
-                "nome": ["type": "string"],
-                "lugar": ["type": "string"],
-                "tipoDeExame": ["type": "string"],
-                "nivel": ["type": "string", "enum": ["Normal", "Atencao", "Urgente"]],
-                "descricao": ["type": "string"]
-            ],
-            "required": ["nome", "lugar", "tipoDeExame", "nivel", "descricao"],
-            "additionalProperties": false
-        ]
-
         let body: [String: Any] = [
             "model": "gpt-6-luna",
             "input": [
@@ -55,7 +42,7 @@ final class OpenCodeExamService {
                 "format": [
                     "type": "json_schema",
                     "name": "exam_analysis",
-                    "schema": examSchema,
+                    "schema": ExamAnalysisResponse.jsonSchema,
                     "strict": true
                 ]
             ]
@@ -94,7 +81,7 @@ final class OpenCodeExamService {
                       let outputData = output.data(using: .utf8) else {
                     throw ServiceError.missingOutput
                 }
-                completion(.success(try JSONDecoder().decode(GPTExamResponse.self, from: outputData)))
+                completion(.success(try JSONDecoder().decode(ExamAnalysisResponse.self, from: outputData)))
             } catch {
                 completion(.failure(error))
             }

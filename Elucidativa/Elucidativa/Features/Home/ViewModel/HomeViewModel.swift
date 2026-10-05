@@ -3,15 +3,6 @@ import UIKit
 import Vision
 import Network
 
-// Struct to decode the JSON response from GPT
-struct GPTExamResponse: Decodable {
-    let nome: String
-    let lugar: String
-    let tipoDeExame: String
-    let nivel: String // "Normal", "Atencao", "Urgente"
-    let descricao: String
-}
-
 private struct OpenAIExamResponse: Decodable {
     let choices: [Choice]
 
@@ -33,6 +24,8 @@ enum AddExamError: LocalizedError {
     case alreadyProcessing
     case invalidImage
     case unreadableText
+    case notAReport
+    case uncertainDocument
     case analysisFailed
 
     var errorDescription: String? {
@@ -43,6 +36,10 @@ enum AddExamError: LocalizedError {
             return "Não foi possível abrir a imagem. Escolha outra foto ou arquivo."
         case .unreadableText:
             return "Não foi possível ler o texto do laudo. Tente uma foto mais nítida."
+        case .notAReport:
+            return "A imagem não parece conter um laudo de exame com resultados. Envie uma foto do laudo."
+        case .uncertainDocument:
+            return "Não foi possível confirmar que a imagem contém um laudo legível. Tente uma foto mais nítida e completa."
         case .analysisFailed:
             return "Não foi possível analisar o exame agora. Tente novamente em instantes."
         }
@@ -90,8 +87,19 @@ class HomeViewModel: ObservableObject {
                 DispatchQueue.main.async { self.processingStage = .analyzing }
                 self.sendToGPT(text: text) { result in
                     switch result {
-                    case .success(let gptResponse):
+                    case .success(let analysis):
+                        let validation = analysis.validate(against: text)
                         DispatchQueue.main.async {
+                            guard case .valid(let gptResponse) = validation else {
+                                self.processingStage = nil
+                                if case .notAReport = validation {
+                                    completion(.failure(.notAReport))
+                                } else {
+                                    completion(.failure(.uncertainDocument))
+                                }
+                                return
+                            }
+
                             let nivel: InterpretationLevel
                             switch gptResponse.nivel.lowercased() {
                             case "normal":
@@ -192,7 +200,7 @@ class HomeViewModel: ObservableObject {
         }
     }
 
-    private func sendToGPT(text: String, completion: @escaping (Result<GPTExamResponse, Error>) -> Void) {
+    private func sendToGPT(text: String, completion: @escaping (Result<ExamAnalysisResponse, Error>) -> Void) {
         let url = URL(string: "https://api.openai.com/v1/chat/completions")!
         
         var request = URLRequest(url: url)
@@ -217,7 +225,14 @@ class HomeViewModel: ObservableObject {
             ],
             "max_tokens": 1024,
             "temperature": 0.2,
-            "response_format": ["type": "json_object"]
+            "response_format": [
+                "type": "json_schema",
+                "json_schema": [
+                    "name": "exam_analysis",
+                    "schema": ExamAnalysisResponse.jsonSchema,
+                    "strict": true
+                ]
+            ]
         ]
         
         do {
@@ -253,7 +268,7 @@ class HomeViewModel: ObservableObject {
                     return
                 }
 
-                let gptResponse = try JSONDecoder().decode(GPTExamResponse.self, from: contentData)
+                let gptResponse = try JSONDecoder().decode(ExamAnalysisResponse.self, from: contentData)
                 DispatchQueue.main.async {
                     completion(.success(gptResponse))
                 }
