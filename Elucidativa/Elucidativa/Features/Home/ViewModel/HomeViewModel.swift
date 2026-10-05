@@ -24,11 +24,37 @@ private struct OpenAIExamResponse: Decodable {
     }
 }
 
+enum ExamProcessingStage {
+    case reading
+    case analyzing
+}
+
+enum AddExamError: LocalizedError {
+    case alreadyProcessing
+    case invalidImage
+    case unreadableText
+    case analysisFailed
+
+    var errorDescription: String? {
+        switch self {
+        case .alreadyProcessing:
+            return "Aguarde a análise do exame atual terminar."
+        case .invalidImage:
+            return "Não foi possível abrir a imagem. Escolha outra foto ou arquivo."
+        case .unreadableText:
+            return "Não foi possível ler o texto do laudo. Tente uma foto mais nítida."
+        case .analysisFailed:
+            return "Não foi possível analisar o exame agora. Tente novamente em instantes."
+        }
+    }
+}
+
 class HomeViewModel: ObservableObject {
     private var persistenceService: ExamRepository = ExamCoreDataService()
     private let openCodeService = OpenCodeExamService(apiKey: "oc_sk_8f7bc518d873_j8He7HdhgXydrf0Feq5nfOz1vYom3k2s")
     @Published var examsList: [ExamModel]
     @Published var selectedExam: ExamModel = .init()
+    @Published private(set) var processingStage: ExamProcessingStage?
     private let networkMonitor = NWPathMonitor()
     private let workerQueue = DispatchQueue(label: "Monitor")
     var isConnected = false
@@ -37,54 +63,80 @@ class HomeViewModel: ObservableObject {
         self.examsList = persistenceService.fetchExams()
     }
     
-    func addExam(imageData: Data, formaDeEntrega: String, completion: ((ExamModel) -> Void)? = nil) {
-        guard let image = UIImage(data: imageData) else {
-            print("Error: Could not create UIImage from data.")
+    func addExam(
+        imageData: Data,
+        formaDeEntrega: String,
+        completion: @escaping (Result<ExamModel, AddExamError>) -> Void
+    ) {
+        guard processingStage == nil else {
+            completion(.failure(.alreadyProcessing))
             return
         }
-        
-        extractText(from: image) { [weak self] extractedText in
-            guard let self = self, let text = extractedText, !text.isEmpty else {
-                print("Error: Could not extract text from image.")
+        processingStage = .reading
+
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self else { return }
+            guard let image = UIImage(data: imageData) else {
+                self.finishAddExam(with: .failure(.invalidImage), completion: completion)
                 return
             }
-            
-            self.sendToGPT(text: text) { result in
-                switch result {
-                case .success(let gptResponse):
-                    let nivel: InterpretationLevel
-                    switch gptResponse.nivel.lowercased() {
-                    case "normal":
-                        nivel = .normal
-                    case "atencao":
-                        nivel = .attention
-                    case "urgente":
-                        nivel = .critical
-                    default:
-                        nivel = .attention
+
+            self.extractText(from: image) { extractedText in
+                guard let text = extractedText, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                    self.finishAddExam(with: .failure(.unreadableText), completion: completion)
+                    return
+                }
+
+                DispatchQueue.main.async { self.processingStage = .analyzing }
+                self.sendToGPT(text: text) { result in
+                    switch result {
+                    case .success(let gptResponse):
+                        DispatchQueue.main.async {
+                            let nivel: InterpretationLevel
+                            switch gptResponse.nivel.lowercased() {
+                            case "normal":
+                                nivel = .normal
+                            case "atencao":
+                                nivel = .attention
+                            case "urgente":
+                                nivel = .critical
+                            default:
+                                nivel = .attention
+                            }
+
+                            let newExam = ExamModel(
+                                date: Date(),
+                                title: gptResponse.nome,
+                                image: imageData,
+                                description: gptResponse.descricao,
+                                lugar: gptResponse.lugar,
+                                tipoDeExame: gptResponse.tipoDeExame,
+                                nivel: nivel,
+                                formaDeEntrega: formaDeEntrega
+                            )
+
+                            self.persistenceService.addExam(exam: newExam)
+                            self.examsList = self.persistenceService.fetchExams()
+                            self.processingStage = nil
+                            completion(.success(newExam))
+                        }
+
+                    case .failure(let error):
+                        print("Error analyzing exam: \(error.localizedDescription)")
+                        self.finishAddExam(with: .failure(.analysisFailed), completion: completion)
                     }
-                    
-                    let newExam = ExamModel(
-                        date: Date(),
-                        title: gptResponse.nome,
-                        image: imageData,
-                        description: gptResponse.descricao,
-                        lugar: gptResponse.lugar,
-                        tipoDeExame: gptResponse.tipoDeExame,
-                        nivel: nivel,
-                        formaDeEntrega: formaDeEntrega
-                    )
-                    
-                    self.persistenceService.addExam(exam: newExam)
-                    self.fetchData()
-                    
-                    // Call the completion handler with the new exam
-                    completion?(newExam)
-                    
-                case .failure(let error):
-                    print("Error sending to GPT: \(error.localizedDescription)")
                 }
             }
+        }
+    }
+
+    private func finishAddExam(
+        with result: Result<ExamModel, AddExamError>,
+        completion: @escaping (Result<ExamModel, AddExamError>) -> Void
+    ) {
+        DispatchQueue.main.async {
+            self.processingStage = nil
+            completion(result)
         }
     }
     

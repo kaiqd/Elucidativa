@@ -57,35 +57,39 @@ struct NewHomeView: View {
     }
 
     private var emptyState: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Image(systemName: "doc.text")
-                .font(.title2)
-                .foregroundStyle(accent)
-                .frame(width: 48, height: 48)
-                .background(accent.opacity(0.1), in: RoundedRectangle(cornerRadius: 12))
+        Button(action: onAddExam) {
+            VStack(alignment: .leading, spacing: 16) {
+                Image(systemName: "doc.text")
+                    .font(.title2)
+                    .foregroundStyle(accent)
+                    .frame(width: 48, height: 48)
+                    .background(accent.opacity(0.1), in: RoundedRectangle(cornerRadius: 12))
 
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Nenhum exame adicionado")
-                    .font(.title3.bold())
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Nenhum exame adicionado")
+                        .font(.title3.bold())
 
-                Text("Envie uma foto do laudo para receber uma explicação em linguagem simples.")
-                    .font(.body)
-                    .foregroundStyle(.secondary)
-            }
+                    Text("Envie uma foto do laudo para receber uma explicação em linguagem simples.")
+                        .font(.body)
+                        .foregroundStyle(.secondary)
+                }
 
-            Button(action: onAddExam) {
                 Text("Adicionar exame")
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
+                    .foregroundStyle(.white)
+                    .background(accent, in: RoundedRectangle(cornerRadius: 12))
             }
-            .buttonStyle(.plain)
-            .foregroundStyle(.white)
-            .background(accent, in: RoundedRectangle(cornerRadius: 12))
+            .padding(20)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 20))
+            .contentShape(RoundedRectangle(cornerRadius: 20))
         }
-        .padding(20)
+        .buttonStyle(.plain)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 20))
+        .accessibilityLabel("Adicionar exame")
+        .accessibilityHint("Abre as opções para enviar um exame")
     }
 
     private var recentExams: some View {

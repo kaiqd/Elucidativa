@@ -96,10 +96,45 @@ struct MainView: View {
         .onChange(of: addFlow.pickedFileURL) { _, url in handleFile(url) }
         .disclaimerAlert(isPresented: $showDisclaimerAlert) {
             if let data = pendingImageData, let format = pendingFileFormat {
-                viewModel.addExam(imageData: data, formaDeEntrega: format)
+                viewModel.addExam(imageData: data, formaDeEntrega: format) { result in
+                    if case .failure(let error) = result {
+                        addFlow.alert = .init(
+                            title: "Não foi possível adicionar o exame",
+                            message: error.localizedDescription
+                        )
+                    }
+                }
             }
             pendingImageData = nil
             pendingFileFormat = nil
+        }
+        .overlay {
+            if let stage = viewModel.processingStage {
+                ZStack {
+                    Color.black.opacity(0.3)
+                        .ignoresSafeArea()
+
+                    VStack(spacing: 14) {
+                        ProgressView()
+                            .controlSize(.large)
+                            .tint(.tabBarSelected)
+
+                        Text(stage == .reading ? "Lendo o exame" : "Analisando o exame")
+                            .font(.headline)
+
+                        Text(stage == .reading
+                             ? "Estamos extraindo o texto do laudo."
+                             : "Isso pode levar alguns instantes.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding(28)
+                    .frame(maxWidth: 300)
+                    .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 20))
+                }
+                .accessibilityElement(children: .combine)
+            }
         }
     }
 
@@ -117,7 +152,10 @@ struct MainView: View {
         defer { if isAccessing { url.stopAccessingSecurityScopedResource() } }
 
         if url.pathExtension.lowercased() == "pdf" {
-            print("PDF processing not implemented yet.")
+            addFlow.alert = .init(
+                title: "PDF ainda não disponível",
+                message: "Por enquanto, envie uma foto ou imagem do laudo."
+            )
         } else if let imageData = try? Data(contentsOf: url) {
             triggerDisclaimer(imageData: imageData, format: "imagem")
         }
