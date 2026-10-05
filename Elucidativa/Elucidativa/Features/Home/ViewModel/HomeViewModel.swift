@@ -26,6 +26,7 @@ private struct OpenAIExamResponse: Decodable {
 
 class HomeViewModel: ObservableObject {
     private var persistenceService: ExamRepository = ExamCoreDataService()
+    private let openCodeService = OpenCodeExamService(apiKey: "oc_sk_8f7bc518d873_j8He7HdhgXydrf0Feq5nfOz1vYom3k2s")
     @Published var examsList: [ExamModel]
     @Published var selectedExam: ExamModel = .init()
     private let networkMonitor = NWPathMonitor()
@@ -60,7 +61,7 @@ class HomeViewModel: ObservableObject {
                     case "urgente":
                         nivel = .critical
                     default:
-                        nivel = .normal
+                        nivel = .attention
                     }
                     
                     let newExam = ExamModel(
@@ -147,27 +148,9 @@ class HomeViewModel: ObservableObject {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer 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", forHTTPHeaderField: "Authorization")
         
-        let systemMessage = "Você é um sistema especializado em explicar termos médicos e científicos de forma acessível a pessoas leigas. Sua missão é receber um laudo de exame médico e fornecer uma explicação concisa sobre os achados descritos para o paciente, utilizando uma linguagem simples e compreensível para um estudante do ensino fundamental.\n\nEstrutura do texto de saída:\n\nResumo dos resultados:Inicie com um parágrafo resumindo o propósito do exame e destacando se há algum achado anormal. Se não houver, informe que nada de errado foi identificado.\n\nExplicação da gravidade:Caso haja algum achado anormal, explique a gravidade de maneira clara e simples, enfatizando que a palavra final sempre deve vir do médico responsável pelo caso.\n\nAchados críticos (se aplicável):Se houver achados críticos que necessitem atenção imediata, chame atenção com emojis e incentive a pessoa a marcar uma consulta de retorno o mais rápido possível."
+        let systemMessage = ExamAnalysisPrompt.systemMessage
+        let userPrompt = ExamAnalysisPrompt.userPrompt(for: text)
 
-        let userPrompt = """
-        Analise o seguinte texto de um laudo de exame médico e extraia as informações solicitadas.
-        Responda APENAS com um objeto JSON válido.
-
-        O JSON deve ter a seguinte estrutura:
-        {
-          "nome": "Nome do Exame",
-          "lugar": "Nome do Laboratório ou Hospital",
-          "tipoDeExame": "Tipo de exame (ex: Sangue, Urina, Imagem)",
-          "nivel": "Classifique a gravidade em uma das três opções: 'Normal', 'Atencao' ou 'Urgente'",
-          "descricao": "A explicação concisa e simples dos resultados, seguindo a sua missão de ser um assistente acessível."
-        }
-
-        Texto do Laudo:
-        ---
-        \(text)
-        ---
-        """
-        
         let body: [String: Any] = [
             "model": "gpt-4o-mini",
             "messages": [
@@ -229,6 +212,21 @@ class HomeViewModel: ObservableObject {
             }
         }
         
-        task.resume()
+        guard openCodeService.isConfigured else {
+            task.resume()
+            return
+        }
+
+        openCodeService.analyze(systemMessage: systemMessage, userPrompt: userPrompt) { result in
+            switch result {
+            case .success(let exam):
+                DispatchQueue.main.async {
+                    completion(.success(exam))
+                }
+            case .failure(let error):
+                print("OpenCode Go indisponível; usando OpenAI: \(error.localizedDescription)")
+                task.resume()
+            }
+        }
     }
 }
